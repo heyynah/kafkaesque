@@ -15,7 +15,9 @@ mongoose.connect('mongodb+srv://hannahteves:imdumb111@kafkaesquedb.xfkeyo8.mongo
     useNewUrlParser: true,
     useUnifiedTopology: true,
     dbName: "kafkakakakaka"
-});
+    })
+    .then(() => console.log('Connected to MongoDB...'))
+    .catch(err => console.error('Could not connect to MongoDB...'));
 
 const store = new MongoDBStore({
     uri: 'mongodb+srv://hannahteves:imdumb111@kafkaesquedb.xfkeyo8.mongodb.net/',

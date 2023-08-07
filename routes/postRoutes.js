@@ -131,7 +131,7 @@ router.post('/add-post', upload.single('image'), async (req, res) => {
         });
 
         if (req.file) {
-          newPost.image = '/img/profiles/' + req.file.filename;
+          newPost.image = '/img/posts/' + req.file.filename;
         }
 
         await newPost.save();
