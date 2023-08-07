@@ -35,7 +35,7 @@ router.get('/displayPosts/:sortBy', async (req, res) => {
   try {
       const sortBy = req.params.sortBy;
       const page = req.query.page;
-      const limit = 5; //TODO: change to 15
+      const limit = 15; //TODO: change to 15
 
       let posts;
     

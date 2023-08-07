@@ -13,7 +13,7 @@
 			</div>
 		  
 			<div style="display: flex">
-				<img class="search-icon" src="/img/search.png" style="float:right;" onclick="window.location.href='search.html';">
+				<img class="search-icon" src="/img/Search.png" style="float:right;" onclick="window.location.href='search.html';">
 				<div class="nav-profile" onclick="navigateToUserProfile()">
 				<span class="nav-profilename"></span>
 				<img class="nav-img" id="nav-user" src="/img/pfp.png" alt="Profile Picture" style="margin-right: 0; padding-right: 0;">
@@ -223,11 +223,9 @@
 			let activeSortOption = 'newest';
 			const postContainer = document.getElementById('postContainer');
 
-			async function loadPosts(sortBy = 'newest', page = 1, limit = 5, upvotedPosts = [], downvotedPosts = []) {
+			async function loadPosts(sortBy = 'newest', page = 1, limit = 15, upvotedPosts = [], downvotedPosts = []) {
 				try {
 					let sortOption = sortBy === 'popular' ? 'popular' : 'newest';
-
-					console.log(upvotedPosts)
 
 					const response = await fetch(`/api/displayPosts/${sortBy}?page=${page}`);
 
