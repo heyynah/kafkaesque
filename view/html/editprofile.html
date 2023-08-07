@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>KAFKAESQUE | View Post</title>
+		<link rel="stylesheet" href="../style.css">
+	</head>
+		
+	<body>
+		<nav>
+			<div class="logo" onclick="window.location.href='/html/home.html';">
+			  <img class="nav-img" src="/img/Logo_white.png" alt="KAFKAESQUE Logo">
+			  <span class="nav-logoname">KAFKAESQUE</span>
+			</div>
+		  
+			<div style="display: flex">
+				<img class="search-icon" src="/img/search.png" style="float:right;" onclick="window.location.href='search.html';">
+				<div class="nav-profile" onclick="navigateToUserProfile()">
+				<span class="nav-profilename"></span>
+				<img class="nav-img" id="nav-user" src="/img/pfp.png" alt="Profile Picture" style="margin-right: 0; padding-right: 0;">
+				</div>
+			</div>	
+		  
+			<script>
+			  	let loggedInUsername = null;
+
+				async function fetchUserDetails() {
+					try {
+					const profileResponse = await fetch('/api/profile');
+					const profileData = await profileResponse.json();
+
+					if (profileResponse.status === 200) {
+						const usernameElement = document.querySelector('.nav-profilename');
+						const profilePictureElement = document.querySelector('#nav-user');
+
+						loggedInUsername = profileData.data.username;
+
+						usernameElement.textContent = profileData.data.username;
+						profilePictureElement.src = profileData.data.profilepicture;
+						
+						const upvotedPosts = profileData.data.upvotedPosts;
+						const downvotedPosts = profileData.data.downvotedPosts;
+
+					} else {
+						console.log('User not authenticated or user details not found');
+					}
+					} catch (error) {
+					console.error('Error fetching user details:', error);
+					}
+				}
+		  
+			  document.addEventListener('DOMContentLoaded', fetchUserDetails);
+			</script>
+		</nav>
+		
+		<main class="main-padding">
+			<section class="eprofile-title">
+				<div class="eprofile-align" style="justify-content:start;">
+					<button type="submit" class="back-btn" onclick="navigateToUserProfile()"><img src="../img/postpg/back.png" style="width:20px;"></button>
+					<span style="margin: 0.5rem;"></span>
+				</div>
+				<h2 style="font-size: 1.5rem; margin-top: 0.5rem;">Edit Profile</h2>
+				<span>User info</span>
+			</section>
+			
+			<section class="eprofile-edit">
+				<div class="profile-display">
+					<div class="postpg-pfp-container">
+						<img class="postpg-pfp" id="user-profile-picture" src="../img/pfp.png" alt="Profile Picture">
+					</div>
+			  
+					<section style="width: 70%; padding: 0.5rem;">
+						<span class="postpg-title" style="color: white;" id="user-display-name"></span><br>
+						<span class="postpg-username" style="color: #FFBFCB;" id="user-username"></span>
+			  
+						<div class="profile-location">
+							<img src="../img/location.png" style="width: 0.45rem; vertical-align: middle;">
+							<span style="vertical-align: middle;" id="user-location"></span>
+						</div>
+
+						<span class="user-location" style="color: #FFBFCB;" id="user-bio"></span>
+					</section>
+				</div>
+				
+				<form class="eprofile-form" id="update-form" style="text-align: left;" action="/api/editProfile" method="POST" enctype="multipart/form-data">
+					<span>Profile Picture: <input type="file" class="accept-img" accept="image/*" style="margin-bottom: 0.5rem;"></span>
+					<input type="text" name="displayName" id="update-display-name" class="postpg-textbox" autocomplete="off" placeholder="Display Name"><br><br>
+					<input type="text" name="location" id="update-location" class="postpg-textbox" autocomplete="off" placeholder="Location"><br><br>
+					<input type="text" name="bio" id="update-bio" class="postpg-textbox" autocomplete="off" placeholder="Bio"><br><br>
+												
+					<div class="eprofile-align">
+						<button type="submit" class="eprofile-btn" onclick="saveChanges(event)">Save Changes</button>
+						<button type="button" class="eprofile-btn" onclick="deleteAccount(event)">Deactivate Account</button>
+					</div>
+				</form>
+				
+				<span id="save-changes">Changes saved successfully!</span>
+			</section>
+		</main>
+		
+		<script>	
+			async function fetchUserDetails() {
+				try {
+					const profileResponse = await fetch('/api/profile');
+					const profileData = await profileResponse.json();
+
+					if (profileResponse.status === 200) {
+						const profilePictureElement = document.getElementById('user-profile-picture');
+						const displayNameElement = document.getElementById('user-display-name');
+						const usernameElement = document.getElementById('user-username');
+						const locationElement = document.getElementById('user-location');
+						const bioElement = document.getElementById('user-bio');
+
+						profilePictureElement.src = profileData.data.profilepicture;
+						displayNameElement.textContent = profileData.data.displayname;
+						usernameElement.textContent = '@' + profileData.data.username;
+						locationElement.textContent = profileData.data.location || 'Location not specified';
+						if (profileData.data.bio) {
+							bioElement.textContent = profileData.data.bio;
+						} else {
+							bioElement.textContent = 'Bio Empty';
+						}
+					} else {
+						console.log('User not authenticated or user details not found');
+					}
+				} catch (error) {
+					console.error('Error fetching user details:', error);
+				}
+			}
+
+			function getQueryParam(param) {
+				const urlParams = new URLSearchParams(window.location.search);
+				return urlParams.get(param);
+			}
+
+			function navigateToUserProfile() {
+				const username = getQueryParam('username');
+				const userProfileUrl = `/html/profile.html?username=${encodeURIComponent(username)}`;
+				window.location.href = userProfileUrl;
+			}
+
+			async function saveChanges(event) {
+				event.preventDefault();
+
+				const imageFile = document.querySelector('.accept-img').files[0];
+				const displayname = document.getElementById('update-display-name').value;
+				const location = document.getElementById('update-location').value;
+				const bio = document.getElementById('update-bio').value;
+
+				const formData = new FormData();
+				formData.append('profilepicture', imageFile);
+				formData.append('displayname', displayname);
+				formData.append('location', location);
+				formData.append('bio', bio);
+
+				try {
+					const response = await fetch('/api/editProfile', {
+					method: 'POST',
+					body: formData,
+					});
+
+					if (response.status === 200) {
+						window.location.reload();
+						const saveChangesElement = document.getElementById('save-changes');
+						saveChangesElement.style.display = 'block';
+
+						console.log(formData)
+
+						setTimeout(() => {
+							saveChangesElement.style.display = 'none';
+						}, 10000);
+						
+					} else {
+						console.log('Error updating profile');
+					}
+				} catch (error) {
+					console.log('Error updating profile:', error);
+				}
+			}
+
+			async function deleteAccount() {
+				const shouldDelete = confirm('Are you sure you want to delete your account?');
+				
+				if (!shouldDelete) {
+					return;
+				}
+				
+				try {
+				const response = await fetch('/api/deleteAccount', {
+					method: 'DELETE',
+				});
+
+				if (response.status === 200) {
+					window.location.href = '/';
+				} else {
+					console.log('Error deleting account');
+				}
+				} catch (error) {
+				console.log('Error deleting account:', error);
+				}
+			}
+
+			document.addEventListener('DOMContentLoaded', fetchUserDetails);
+		</script>
+	</body>
+</html>

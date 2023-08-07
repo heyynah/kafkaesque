@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>KAFKAESQUE | View Post</title>
+		<link rel="stylesheet" href="/style.css">
+	</head>
+				
+	<body>
+		<nav>
+			<div class="logo" onclick="window.location.href='/html/home.html';">
+			<img class="nav-img" src="/img/Logo_white.png" alt="KAFKAESQUE Logo">
+			<span class="nav-logoname">KAFKAESQUE</span>
+			</div>
+		
+			<div style="display: flex">
+				<img class="search-icon" src="/img/search.png" style="float:right;" onclick="window.location.href='search.html';">
+				<div class="nav-profile" onclick="navigateToUserProfile()">
+				<span class="nav-profilename"></span>
+				<img class="nav-img" id="nav-user" src="/img/pfp.png" alt="Profile Picture" style="margin-right: 0; padding-right: 0;">
+				</div>
+			</div>	
+		
+			<script>
+				let loggedInUsername = null;
+
+				async function fetchUserDetails() {
+					try {
+					const profileResponse = await fetch('/api/profile');
+					const profileData = await profileResponse.json();
+
+					if (profileResponse.status === 200) {
+						const usernameElement = document.querySelector('.nav-profilename');
+						const profilePictureElement = document.querySelector('#nav-user');
+
+						loggedInUsername = profileData.data.username;
+
+						usernameElement.textContent = profileData.data.username;
+						profilePictureElement.src = profileData.data.profilepicture;
+
+						// Assuming the user data includes upvotedPosts and downvotedPosts arrays
+						const upvotedPosts = profileData.data.upvotedPosts;
+						const downvotedPosts = profileData.data.downvotedPosts;
+						const upvotedComments = profileData.data.upvotedComments;
+						const downvotedComments = profileData.data.downvotedComments;
+
+						 // Get postId from URL
+						const urlParams = new URLSearchParams(window.location.search);
+                		const postId = urlParams.get('postId');
+						markVotedComments(upvotedComments, downvotedComments);
+
+						fetchcomments(postId, upvotedComments, downvotedComments);
+
+					} else {
+						console.log('User not authenticated or user details not found');
+					}
+					} catch (error) {
+					console.error('Error fetching user details:', error);
+					}
+				}
+		
+				document.addEventListener('DOMContentLoaded', fetchUserDetails);
+			</script>
+		</nav>
+				
+		<main class="main-padding">
+			<section class="col-trending">
+				<span>Trending Games</span><br>
+				
+				<div class="trending-list">
+					<img class="ind-game" src="/img/trending/1.png">
+					<img class="ind-game" src="/img/trending/2.png">
+					<img class="ind-game" src="/img/trending/3.png">
+					<img class="ind-game" src="/img/trending/4.png">
+					<img class="ind-game" src="/img/trending/5.png">
+				</div>
+			</section>
+					
+			<section class="col-main">
+				<button type="submit" class="back-btn" onclick="window.location.href='../html/home.html';"><img src="/img/postpg/back.png" style="width:30px;"></button>
+				
+				<div class="post-op">
+					<div class="ind-post">
+						<img class="postpg-pfp" src="/img/profiles/default.jpg">
+						
+						<section style="width: 70%;">
+							<span class="postpg-title" contenteditable="false">Post Title</span><br>				
+							<span class="post-username" style="font-size:0.8rem" onclick="navigateToProfile();">username</span>
+							
+							<div class="post-inter">
+								<img src="/img/posts/views.png" style="width: 0.8rem; vertical-align: middle;">
+								<span style="vertical-align: middle;" class="postpg-views">0</span>
+								<img src="/img/posts/comments.png" style="width: 0.7rem; vertical-align: middle;">
+								<span style="vertical-align: middle;" class="postpg-commentsCount"></span>
+								&nbsp • &nbsp
+								<span style="vertical-align: middle;" class="postpg-date"></span>
+								<span style="vertical-align: middle; display: none;" class="postpg-edited">[edited]</span>
+							</div><br>
+						</section>
+
+						<div class="vote-container">
+							<span class="upvote-count">0</span>
+							<button class="vote-button upvote" action="">
+								<img class="upvote-image" src="/img/posts/upvote.png" alt="Upvote">
+							</button>
+							<button class="vote-button downvote">
+								<img class="downvote-image" src="/img/posts/downvote.png" alt="Downvote">
+							</button>
+							<span class="downvote-count">0</span>
+						</div>				
+					</div>
+
+					<div class="edit-post">
+						<!-- <button type="submit" class="profile-actions">Edit Post</button> -->
+						<!-- <button type="submit" class="profile-actions delete-post-button" onclick="attachDeletePostListener()">Delete Post</button> -->
+					</div>
+					
+					<div class="postpg-content">
+						<p class="postpg-content-p" contenteditable="false"></p>
+					</div>
+
+					<div class="postpg-imgcontainer">
+						<!-- images will be dynamically inserted here -->
+					</div>
+					
+				</div>
+				
+				<div class="postpg-comments">
+					<span class="comment-title">Comments</span><br>
+				
+					<form onsubmit="addcomment(event)" autocomplete="off">
+						<div class="postpg-comment">
+							<input type="text" name="comment" class="postpg-textbox" placeholder="Penny for your thoughts?">
+							<button type="submit" name="submitbtn" class="postpg-btn" onclick="addcomment(event)">
+								<img src="/img/postpg/send.png">
+							</button>
+						</div>
+					</form>
+
+					<br><hr><br>
+
+					<div class="comment-container">
+						<!-- comments will be dynamically inserted here -->
+					</div>
+				</div>
+			</section>
+					
+			<section class="col-cat">
+				<span class="cat-title">Categories</span><br>
+				<span class="cat-ind">Action</span><br>
+				<span class="cat-ind">Action-Adventure</span><br>
+				<span class="cat-ind">Adventure</span><br>
+				<span class="cat-ind">Puzzle</span><br>
+				<span class="cat-ind">Role-Playing</span><br>
+				<span class="cat-ind">Simulation</span><br>
+				<span class="cat-ind">Strategy</span><br>
+				<span class="cat-ind">MMO</span><br>
+				<span class="cat-ind">Platformer</span><br>
+				<span class="cat-ind">Board Games</span><br>
+				<span class="cat-ind">Gacha</span><br>			
+			</section>
+		</main>
+				
+		<script>
+			async function fetchAuthorDetails(username) {
+				try {
+					const userResponse = await fetch(`/api/profile/${username}`);
+					const userData = await userResponse.json();
+
+					if (userResponse.status === 200) {
+						const usernameElement = document.querySelector('.post-username');
+						const profilePictureElement = document.querySelector('.postpg-pfp');
+
+						usernameElement.textContent = userData.data.username;
+						profilePictureElement.src = userData.data.profilepicture;
+
+						const upvotedPosts = userData.upvotedPosts;
+						const downvotedPosts = userData.downvotedPosts;
+
+						attachUsernameClickListeners(usernameElement);
+					} else {
+						console.log('User not found');
+					}
+				} catch (error) {
+					console.error('Error fetching user details:', error);
+				}
+			}
+
+			function navigateToUserProfile() {
+				if (loggedInUsername) {
+					const userProfileUrl = `/html/profile.html?username=${encodeURIComponent(loggedInUsername)}`;
+					window.location.href = userProfileUrl;
+				} else {
+					console.error('User is not logged in. Unable to redirect to the profile.');
+				}
+			}
+
+			function attachUsernameClickListeners() {
+				const postUsernames = document.querySelectorAll('.post-username');
+
+				postUsernames.forEach((usernameElement) => {
+					usernameElement.addEventListener('click', (event) => {
+					event.preventDefault();
+					const username = event.target.textContent;
+					navigateToProfile(username);
+					});
+				});
+			}
+
+			function navigateToProfile(username) {
+				const userProfileUrl = `/html/profile.html?username=${encodeURIComponent(username)}`;
+				window.location.href = userProfileUrl;
+			}
+
+			async function fetchPostDetails(postId, upvotedPosts=[], downvotedPosts=[]) {
+				try {
+					const postResponse = await fetch(`/api/post/${postId}`);
+					const postData = await postResponse.json();
+
+					if (postResponse.status === 200) {
+
+						const postTitleElement = document.querySelector('.postpg-title');
+						const postContentElement = document.querySelector('.postpg-content-p');
+						const postImageContainer = document.querySelector('.postpg-imgcontainer');
+						const postViewsElement = document.querySelector('.postpg-views');
+						const postcommentsElement = document.querySelector('.postpg-commentsCount');
+						const postDateElement = document.querySelector('.postpg-date');
+
+						postTitleElement.textContent = postData.title;
+						postContentElement.textContent = postData.description;
+
+						if (postData.image) {
+							const imageElement = document.createElement('img');
+							imageElement.src = postData.image;
+							imageElement.alt = '';
+							imageElement.classList.add('postpg-img');
+
+							postImageContainer.appendChild(imageElement);
+						}
+						postViewsElement.textContent = postData.views;
+						postcommentsElement.textContent = postData.commentsCount;
+						postDateElement.textContent = new Date(postData.createdAt).toLocaleDateString();
+
+						// check if post is edited
+						if (postData.isEdited) {
+							const editedPost = document.querySelector(`.postpg-edited`);
+							editedPost.style.display = 'block';
+						}
+
+						const authorUsername = postData.username;
+						fetchAuthorDetails(authorUsername);
+
+						// Check if the logged-in user is the author of the post
+						if (loggedInUsername === authorUsername) {	
+							// If the logged-in user is the author, add the "Edit Post" button
+							const editPostButton = document.createElement('button');
+							editPostButton.textContent = 'Edit';
+							editPostButton.classList.add('profile-actions','edit-post-button');
+							editPostButton.addEventListener('click', () => {
+								editPost(postId);
+							});
+							// If the logged-in user is the author, add the "Delete Post" button
+							const deletePostButton = document.createElement('button');
+							deletePostButton.textContent = 'Delete';
+							deletePostButton.classList.add('profile-actions','delete-post-button');
+							deletePostButton.addEventListener('click', () => {
+								deletePost(postId);
+							});
+
+							// Add a cancel button to the edit post form
+							const cancelButton = document.createElement('button');
+							cancelButton.textContent = 'Cancel';
+							cancelButton.classList.add('profile-actions','cancel-button');
+							cancelButton.style.display = 'none';
+							cancelButton.addEventListener('click', () => {
+								cancelEditPost(postId);
+							});
+
+							// Append the "Delete Post" button to the editDeleteContainer
+							const editDeleteContainer = document.querySelector('.edit-post');
+							editDeleteContainer.appendChild(editPostButton);
+							editDeleteContainer.appendChild(deletePostButton);
+							editDeleteContainer.appendChild(cancelButton);
+
+							// Add an import image button to the edit post form
+							const importImageButton = document.createElement('button');
+							importImageButton.textContent = 'Import Image';
+							importImageButton.classList.add('profile-actions','import-image-button');
+							importImageButton.style.display = 'none';
+							importImageButton.addEventListener('click', () => {
+								// importImage(postId);
+							});
+
+							// Append the "Import Image" button to the postImageContainer
+							const postImageContainer = document.querySelector('.postpg-imgcontainer');
+							postImageContainer.appendChild(importImageButton);								
+						} 
+						} else {
+							console.log('Post not found');
+						}
+
+				} catch (error) {
+					console.error('Error fetching post details:', error);
+				}
+			}
+
+			async function attachVoteEventListeners(postId) {
+				const upvoteButton = document.querySelector(".vote-button.upvote");
+				const downvoteButton = document.querySelector(".vote-button.downvote");
+				const upvoteCount = document.querySelector(".upvote-count");
+				const downvoteCount = document.querySelector(".downvote-count");
+
+				// get the current vote counts from postid
+				const voteResponse = await fetch(`/api/post/${postId}`);
+				const voteData = await voteResponse.json();
+
+				upvoteCount.textContent = voteData.upvotes;
+				downvoteCount.textContent = voteData.downvotes;
+
+				let upvoteCounter = parseInt(upvoteCount.textContent);
+				let downvoteCounter = parseInt(downvoteCount.textContent);					
+
+				upvoteButton.addEventListener("click", async () => {
+					try {
+					if (upvoteButton.classList.contains("voted")) {
+						// User has already upvoted, decrement the counter and remove the vote
+						upvoteCounter--;
+						upvoteButton.classList.remove("voted");
+						localStorage.removeItem(`${postId}_vote`);
+
+						// Send an HTTP PATCH request to remove the upvote from the server
+						await fetch(`/api/posts/${postId}/vote`, {
+						method: "PATCH",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({ voteType: "remove_upvote" }),
+						});
+					} else {
+						// User is upvoting, increment the counter and set the vote
+						upvoteCounter++;
+						upvoteButton.classList.add("voted");
+						localStorage.setItem(`${postId}_vote`, "upvote");
+						localStorage.removeItem(`${postId}_downvote`);
+
+						// If downvoteButton is active, decrease its counter and remove the downvote
+						if (downvoteButton.classList.contains("voted")) {
+							downvoteCounter--;
+							downvoteButton.classList.remove("voted");
+
+							await fetch(`/api/posts/${postId}/vote`, {
+								method: "PATCH",
+								headers: {
+								"Content-Type": "application/json",
+								},
+								body: JSON.stringify({ voteType: "remove_downvote" }),
+							});
+						}
+
+						// Send an HTTP PATCH request to remove the downvote and add an upvote to the server
+						await fetch(`/api/posts/${postId}/vote`, {
+							method: "PATCH",
+							headers: {
+							"Content-Type": "application/json",
+							},
+							body: JSON.stringify({ voteType: "upvote" }),
+						});
+					}
+
+					// Update the vote count elements
+					upvoteCount.textContent = upvoteCounter.toString();
+					downvoteCount.textContent = downvoteCounter.toString();
+					} catch (error) {
+						console.error("Error upvoting post:", error);
+					}
+				});
+
+				downvoteButton.addEventListener("click", async () => {
+					try {
+
+					if (downvoteButton.classList.contains("voted")) {
+						// User has already downvoted, decrement the counter and remove the vote
+						downvoteCounter--;
+						downvoteButton.classList.remove("voted");
+						localStorage.removeItem(`${postId}_vote`);
+						// Send an HTTP PATCH request to remove the downvote from the server
+						await fetch(`/api/posts/${postId}/vote`, {
+						method: "PATCH",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({ voteType: "remove_downvote" }),
+						});
+					} else {
+						// User is downvoting, increment the counter and set the vote
+						downvoteCounter++;
+						downvoteButton.classList.add("voted");
+						localStorage.setItem(`${postId}_vote`, "downvote");
+						localStorage.removeItem(`${postId}_upvote`);
+
+						// If upvoteButton is active, decrease its counter and remove the upvote
+						if (upvoteButton.classList.contains("voted")) {
+						upvoteCounter--;
+						upvoteButton.classList.remove("voted");
+
+						await fetch(`/api/posts/${postId}/vote`, {
+							method: "PATCH",
+							headers: {
+							"Content-Type": "application/json",
+							},
+							body: JSON.stringify({ voteType: "remove_upvote" }),
+						});
+						}
+
+						// Send an HTTP PATCH request to remove the upvote and add a downvote to the server
+						await fetch(`/api/posts/${postId}/vote`, {
+							method: "PATCH",
+							headers: {
+							"Content-Type": "application/json",
+							},
+							body: JSON.stringify({ voteType: "downvote" }),
+						});
+					}
+
+					// Update the vote count elements
+					upvoteCount.textContent = upvoteCounter;
+					downvoteCount.textContent = downvoteCounter;
+					} catch (error) {
+					console.error("Error downvoting post:", error);
+					}
+				});
+
+				// Check the local storage for user vote when attaching event listeners
+				const userVote = localStorage.getItem(`${postId}_vote`);
+
+				if (userVote === "upvote") {
+					upvoteButton.classList.add("voted");
+				} else if (userVote === "downvote") {
+					downvoteButton.classList.add("voted");
+				}
+			}
+
+			function markVotedComments(upvotedComments, downvotedComments) {
+				upvotedComments.forEach(commentId => {
+					const upvoteButton = document.querySelector(`[data-comment-id="${commentId}"] .upvote`);
+					if (upvoteButton) {
+						upvoteButton.classList.add("voted");
+					}
+				});
+
+				downvotedComments.forEach(commentId => {
+					const downvoteButton = document.querySelector(`[data-comment-id="${commentId}"] .downvote`);
+					if (downvoteButton) {
+						downvoteButton.classList.add("voted");
+					}
+				});
+			}
+
+
+			// Attach event listeners to comment vote buttons on the page
+			async function handleVoteButtonClick(event) {
+				try {
+					event.preventDefault();
+
+					const commentVotesContainer = event.target.closest(".comment-votes");
+					if (!commentVotesContainer) {
+						return;
+					}
+
+					const commentId = commentVotesContainer.getAttribute("data-comment-id");
+
+					const upvoteButton = commentVotesContainer.querySelector(".upvote");
+					const downvoteButton = commentVotesContainer.querySelector(".downvote");
+
+					const upvoteCount = commentVotesContainer.querySelector(".upvote-count");
+					const downvoteCount = commentVotesContainer.querySelector(".downvote-count");
+
+					const userVote = localStorage.getItem(`${commentId}_vote`);
+
+					const response = await fetch(`/api/getCommentData/${commentId}`);
+					const commentVoteData = await response.json();
+
+					let upvoteCounter = parseInt(commentVoteData.upvotes);
+					let downvoteCounter = parseInt(commentVoteData.downvotes);
+
+					if (userVote === "upvote") {
+						upvoteButton.classList.add("voted");
+					} else if (userVote === "downvote") {
+						downvoteButton.classList.add("voted");
+					}
+
+					upvoteButton.addEventListener("click", async () => {
+						if (upvoteButton.classList.contains("voted")) {
+							upvoteCounter--;
+							upvoteButton.classList.remove("voted");
+							localStorage.removeItem(`${commentId}_vote`);
+							await updateVoteOnServer(commentId, "remove_upvote");
+						} else {
+							upvoteCounter++;
+							upvoteButton.classList.add("voted");
+							localStorage.setItem(`${commentId}_vote`, "upvote");
+							localStorage.removeItem(`${commentId}_downvote`);
+
+							if (downvoteButton.classList.contains("voted")) {
+								downvoteCounter--;
+								downvoteButton.classList.remove("voted");
+								await updateVoteOnServer(commentId, "remove_downvote");
+							}
+
+							await updateVoteOnServer(commentId, "upvote");
+						}
+
+						updateVoteCounts();
+					});
+
+					downvoteButton.addEventListener("click", async () => {
+						if (downvoteButton.classList.contains("voted")) {
+							downvoteCounter--;
+							downvoteButton.classList.remove("voted");
+							localStorage.removeItem(`${commentId}_vote`);
+							await updateVoteOnServer(commentId, "remove_downvote");
+						} else {
+							downvoteCounter++;
+							downvoteButton.classList.add("voted");
+							localStorage.setItem(`${commentId}_vote`, "downvote");
+							localStorage.removeItem(`${commentId}_upvote`);
+
+							if (upvoteButton.classList.contains("voted")) {
+								upvoteCounter--;
+								upvoteButton.classList.remove("voted");
+								await updateVoteOnServer(commentId, "remove_upvote");
+							}
+
+							await updateVoteOnServer(commentId, "downvote");
+						}
+
+						updateVoteCounts();
+					});
+
+					function updateVoteCounts() {
+						upvoteCount.textContent = upvoteCounter.toString();
+						downvoteCount.textContent = downvoteCounter.toString();
+					}
+
+					async function updateVoteOnServer(commentId, voteType) {
+						try {
+							await fetch(`/api/commentsVote/${commentId}`, {
+								method: "PATCH",
+								headers: {
+									"Content-Type": "application/json",
+								},
+								body: JSON.stringify({ voteType }),
+							});
+						} catch (error) {
+							console.error(`Error updating vote (${voteType}) for comment ${commentId}:`, error);
+						}
+					}
+				} catch (error) {
+					console.error("Error handling vote button click:", error);
+				}
+			}
+
+
+			async function attachCommentVoteListeners(commentContainer) {
+				// Attach event listener using event delegation on the comment container
+				commentContainer.addEventListener("click", handleVoteButtonClick);
+			}
+
+			async function generatecommentHTML(commentData, upvotedComments = [], downvotedComments = []) {
+				const commentContainer = document.querySelector('.comment-container');
+				const isCommentAuthor = commentData.username === loggedInUsername;
+				const commentId = commentData._id;
+
+				let editButton = '';
+				let deleteButton = '';
+				let cancelButton = '';
+				let editedSpan = '';
+				let replyButton = `<button type="button" class="reply-comment-button" data-comment-id="${commentId}">Reply</button>`;
+
+				if (isCommentAuthor) {
+					editButton = `<button type="button" class="edit-comment-button" onclick="attachEditCommentListener()" data-comment-id="${commentId}">Edit</button>`;
+					deleteButton = `<button type="button" class="delete-comment-button" onclick="attachDeleteCommentListener()" data-comment-id="${commentId}">Delete</button>`;
+					cancelButton = `<button type="button" class="cancel-comment-button" style="display:none;" onclick="attachCancelCommentListener()" data-comment-id="${commentId}">Cancel</button>`;
+				}
+
+				if (commentData.isEdited) {
+					editedSpan = `<span style="color: #878a8c;">[edited]</span>`;
+				}
+
+				let nestedCommentsHTML = '';
+				if (commentData.nestedComments && commentData.nestedComments.length > 0) {
+					nestedCommentsHTML = '';
+					for (const nestedCommentId of commentData.nestedComments) {
+						try {
+							const commentsResponse = await fetch(`/api/getCommentData/${nestedCommentId}`);
+
+							if (commentsResponse.ok) {
+								const nestedCommentData = await commentsResponse.json();
+								const generatedHTML = await generatecommentHTML(nestedCommentData);
+
+								nestedCommentsHTML += generatedHTML;
+							} else {
+								console.error(`Failed to fetch nested comment data for ID: ${nestedCommentId}`);
+							}
+						} catch (error) {
+							console.error(`Error fetching nested comment data for ID: ${nestedCommentId}`, error);
+						}
+					}
+
+					attachCommentVoteListeners(commentContainer);
+				}
+
+				return `
+					<div class="ind-comment" data-comment-id="${commentId}">
+						<div class="ind-acc">
+							<img style="vertical-align: middle;" class="postcomment-pfp" src="${commentData.profilepicture}">
+							<span style="vertical-align: middle; font-weight: bold; cursor: pointer">${commentData.username}</span>
+						</div>
+
+						<span class="comment-style">${commentData.content}</span>
+
+						<div class="comment-actions">
+							<div class="comment-votes" data-comment-id="${commentId}">
+								<span class="upvote-count" >${commentData.upvotes}</span>
+								<button class="vote-button upvote" data-comment-id="${commentId}">
+									<img class="upvote-image" src="/img/posts/upvote.png" alt="Upvote">
+								</button>
+								<button class="vote-button downvote" data-comment-id="${commentId}">
+									<img class="downvote-image" src="/img/posts/downvote.png" alt="Downvote">
+								</button>
+								<span class="downvote-count">${commentData.downvotes}</span>
+							</div>
+
+							<span>&nbsp | ${replyButton} ${editButton} ${deleteButton} ${cancelButton}</span>
+							<span class="comment-date">${new Date(commentData.createdAt).toLocaleDateString()} ${editedSpan}</span>
+						</div>
+
+						<div class="nested-comments">
+							${nestedCommentsHTML}
+						</div>
+					</div>
+				`;
+			}
+
+			async function fetchcomments(postId, upvotedComments = [], downvotedComments = []) {
+				const commentContainer = document.querySelector('.comment-container');
+				try {
+					const commentsResponse = await fetch(`/api/comments/${postId}`);
+
+					if (commentsResponse.ok) {
+						const comments = await commentsResponse.json();	
+						let html = '';
+
+						if (comments && comments.length > 0) {
+							for (const commentData of comments) {
+								if (!commentData.parentId) { // Check if the comment does not have a parentId
+									const commentHTML = await generatecommentHTML(commentData, upvotedComments, downvotedComments);
+									html += commentHTML;
+								}
+							}
+						} else {
+							html = '<p>No comments found.</p>';
+						}
+
+						commentContainer.innerHTML = html;
+
+						// Attach event listeners to reply buttons after HTML is generated
+						const replyButtons = document.querySelectorAll('.reply-comment-button');
+						replyButtons.forEach(button => {
+							button.addEventListener('click', () => createTextbox(button.getAttribute('data-comment-id')));
+						});
+					} else if (commentsResponse.status === 404) {
+						const commentContainer = document.querySelector('.comment-container');
+						commentContainer.innerHTML = '<p>No comments found.</p>';
+					} else {
+						console.log('Failed to fetch comments');
+					}
+				} catch (error) {
+					console.error('Error fetching comments:', error);
+				}
+			}
+
+			function createTextbox(commentId) {
+				const commentContainer = document.querySelector(`[data-comment-id="${commentId}"] .nested-comments`);
+
+				if (commentContainer.querySelector('.nested-comment-textbox') === null) {
+					const textboxHTML = `
+						<div class="nested-comment-textbox" style="display:flex; gap: 0.2rem; margin-top:1rem">
+							<input type="text" name="comment" class="postpg-textbox" placeholder="Reply" style="width: 80%; min-width: 10rem; autocomplete: off">
+							<button type="submit" name="submitbtn" class="postpg-btn" onclick="addNestComment(event,'${commentId}')">
+								<img src="/img/postpg/send.png">
+							</button>
+						</div>
+					`;
+
+					commentContainer.insertAdjacentHTML('beforeend', textboxHTML);
+				} else {
+					commentContainer.removeChild(commentContainer.querySelector('.nested-comment-textbox'));
+				}
+			}
+
+			async function addNestComment(event, parentCommentId) {
+				event.preventDefault();
+
+				console.log('Adding nested comment', parentCommentId);
+				// Select the comment input associated with the parent comment
+				const commentInput = document.querySelector(`[data-comment-id="${parentCommentId}"] .postpg-textbox`);
+				const commentContent = commentInput.value.trim();
+
+				if (commentContent === '') {
+					return;
+				}
+
+				const urlParams = new URLSearchParams(window.location.search);
+				const postId = urlParams.get('postId');
+
+				const commentData = {
+					content: commentContent,
+					postId: postId,
+					parentId: parentCommentId,
+				};
+
+				try {
+					const response = await fetch(`/api/addReply/${postId}/${parentCommentId}`, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify(commentData),
+					});
+
+					if (!response.ok) {
+						throw new Error('Failed to add comment');
+					}
+
+					const data = await response.json();
+					// Create the nested comment HTML
+					const nestedCommentHTML = generatecommentHTML(data);
+
+					// Insert the nested comment HTML into the DOM
+					const commentContainer = document.querySelector(`[data-comment-id="${parentCommentId}"] .nested-comments`);
+					commentContainer.insertAdjacentHTML('beforeend', nestedCommentHTML);
+
+					// Remove the textbox
+					createTextbox(parentCommentId);
+
+					fetchcomments(postId);
+				} catch (error) {
+					console.error('Error adding comment:', error);
+				}
+			}
+
+			async function addcomment(event, parentCommentId) {
+				event.preventDefault();
+
+				const commentInput = document.querySelector('.postpg-textbox');
+				const commentContent = commentInput.value.trim();
+
+				if (commentContent === '') {
+					return;
+				}
+
+				const urlParams = new URLSearchParams(window.location.search);
+				const postId = urlParams.get('postId');
+
+				const commentData = {
+					content: commentContent,
+					postId: postId,
+				};
+
+				try {
+					const response = await fetch(`/api/addComments/${postId}`, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify(commentData),
+					});
+
+					if (!response.ok) {
+						throw new Error('Failed to add comment');
+					}
+
+					const data = await response.json();
+					// Create the nested comment element
+					const nestedCommentHTML = generatecommentHTML(data);
+
+					// Get the nested-comments container element within the parent comment container
+					const nestedCommentsContainer = document.querySelector('.nested-comments');
+
+					// Create a new div element for the nested comment
+					const nestedCommentDiv = document.createElement('div');
+					nestedCommentDiv.classList.add('nested-comment');
+					nestedCommentDiv.innerHTML = nestedCommentHTML;
+
+					if (nestedCommentsContainer && nestedCommentHTML) {
+						nestedCommentsContainer.appendChild(nestedCommentDiv);
+					} else {
+						console.error('Failed to find nested-comments container or nestedCommentHTML is empty.');
+					}
+
+
+					// Remove the existing textbox
+					commentInput.remove();
+					window.location.reload();
+				} catch (error) {
+					console.error('Error adding comment:', error);
+				}
+			}
+
+			/* --------------------------- EDIT & DELETE BUTTONS -------------------------- */
+			async function cancelEditPost(postId) {
+				// Get the post title and description elements
+				const postTitle = document.querySelector(`.postpg-title`);
+				const postContent = document.querySelector(`.postpg-content-p`);
+
+				// Make the title and description non-editable
+				postTitle.contentEditable = false;
+				postContent.contentEditable = false;
+
+				// Set the edit button text back to "Edit"
+				const editButton = document.querySelector(`.edit-post-button`);
+				editButton.textContent = 'Edit';
+
+				const deleteButton = document.querySelector(`.delete-post-button`);
+				deleteButton.style.display = 'inline-block';
+
+				const cancelButton = document.querySelector(`.cancel-button`);
+				cancelButton.style.display = 'none';
+
+				// Fetch the post data from the server
+				const response = await fetch(`/api/post/${postId}`);
+
+				if (response.ok) {
+					const post = await response.json();
+
+					// Set the title and description text to the fetched data
+					postTitle.textContent = post.title;
+					postContent.textContent = post.description;
+				} else {
+					console.log('Failed to fetch post');
+				}
+			}
+
+			async function editPost(postId, newTitle, newContent) {
+				// Get the post title and description elements
+				const postTitle = document.querySelector(`.postpg-title`);
+				const postContent = document.querySelector(`.postpg-content-p`);
+
+				// Make the title and description editable
+				postTitle.contentEditable = true;
+				postContent.contentEditable = true;
+
+				// Set the edit button text to "Save"
+				const editButton = document.querySelector(`.edit-post-button`);
+				editButton.textContent = 'Save';
+
+				const deleteButton = document.querySelector(`.delete-post-button`);
+				deleteButton.style.display = 'none';
+
+				const cancelButton = document.querySelector(`.cancel-button`);
+				cancelButton.style.display = 'inline-block';
+
+				// Add a click event listener to the edit button
+				editButton.addEventListener('click', async () => {
+					// Get the updated title and description
+					const updatedTitle = postTitle.textContent.trim();
+					const updatedContent = postContent.textContent.trim();
+
+					// Send a PUT request to the API to update the post
+					try {
+						const response = await fetch(`/api/editPost/${postId}`, {
+							method: 'PATCH',
+							headers: {
+								'Content-Type': 'application/json',
+							},
+							body: JSON.stringify({
+								title: updatedTitle,
+								description: updatedContent,
+							}),
+						});
+
+						if (response.ok) {
+							// If the update is successful, reload the page
+							window.location.reload();
+						} else {
+							throw new Error('Failed to update post');
+						}
+					} catch (error) {
+						console.error('Error updating post:', error);
+					}
+				});
+			}
+
+			async function deletePost(postId) {
+				const shouldDelete = confirm('Are you sure you want to delete this post?');
+
+				if (!shouldDelete) {
+					return;
+				}
+
+				try {
+					const response = await fetch(`/api/deletePost/${postId}`, {
+						method: 'DELETE',
+					});
+
+					if (response.ok) {
+						window.location.href = '/html/home.html';
+					} else {
+					throw new Error('Failed to delete post');
+					}
+				} catch (error) {
+					console.error('Error deleting post:', error);
+				}
+			}
+
+			async function editComment(commentId) {
+				try {
+					const comment = document.querySelector(`[data-comment-id="${commentId}"] .comment-style`);
+					
+					if (!comment) {
+						console.error('Comment element not found.');
+						return;
+					}
+
+					// Make the comment editable
+					comment.contentEditable = true;
+
+					// Set the edit button text to "Save"
+					const editButton = document.querySelector('.edit-comment-button');
+					editButton.textContent = 'Save';
+
+					const deleteButton = document.querySelector('.delete-comment-button');
+					deleteButton.style.display = 'none';
+
+					const cancelButton = document.querySelector('.cancel-comment-button');
+					cancelButton.style.display = 'inline-block';
+
+					// Add a click event listener to the edit button
+					editButton.addEventListener('click', async () => {
+						// Get the updated comment
+						const updatedComment = comment.textContent.trim();
+
+						// Send a PUT request to the API to update the comment
+						try {
+							const response = await fetch(`/api/editComment/${commentId}`, {
+								method: 'PATCH',
+								headers: {
+									'Content-Type': 'application/json',
+								},
+								body: JSON.stringify({
+									content: updatedComment,
+								}),
+							});
+
+							if (response.ok) {
+								// If the update is successful, reload the page
+								window.location.reload();
+							} else {
+								throw new Error('Failed to update comment');
+							}
+						} catch (error) {
+							console.error('Error updating comment:', error);
+						}
+					});
+				} catch (error) {
+					console.error('Error editing comment:', error);
+				}
+			}
+
+
+			async function deleteComment(commentId) {
+				const shouldDelete = confirm('Are you sure you want to delete this comment?');
+
+				if (!shouldDelete) {
+					return;
+				}
+
+				try {
+					const urlParams = new URLSearchParams(window.location.search);
+					const postId = urlParams.get('postId');
+
+					const response = await fetch(`/api/deleteComment/${postId}/${commentId}`, {
+						method: 'DELETE',
+					});
+
+					if (response.ok) {
+						const urlParams = new URLSearchParams(window.location.search);
+						location.reload();
+					} else {
+						throw new Error('Failed to delete comment');
+					}
+				} catch (error) {
+					console.error('Error deleting comment:', error);
+				}
+			}
+
+			function attachDeletePostListener() {		
+				const deletePostButton = document.querySelector('.delete-post-button');
+
+				if (deletePostButton) {
+
+						console.log('Delete button clicked');
+						deletePostButton.addEventListener('click', () => {
+							const urlParams = new URLSearchParams(window.location.search);
+							const postId = urlParams.get('postId');
+
+							if (postId) {
+								deletePost(postId);
+							} else {
+								console.log('Post ID not found in the URL');
+							}
+						});
+					}
+				
+			}
+
+			function attachEditCommentListener() {
+				const editCommentButtons = document.querySelectorAll('.edit-comment-button');
+				editCommentButtons.forEach((button) => {
+					button.addEventListener('click', (event) => {
+						const commentId = event.target.dataset.commentId;
+						editComment(commentId);
+						console.log('Edit comment clicked');
+					});
+				});
+			}
+
+			function attachCancelCommentListener() {
+				const cancelButton = document.querySelector('.cancel-comment-button');
+				cancelButton.addEventListener('click', () => {
+					window.location.reload();
+				});
+			}
+
+			function attachDeleteCommentListener() {
+				const commentDeleteButtons = document.querySelectorAll('.delete-comment-button');
+				commentDeleteButtons.forEach((button) => {
+					button.addEventListener('click', (event) => {
+						const commentId = event.target.dataset.commentId;
+						deleteComment(commentId);
+						console.log('Delete comment clicked');
+					});
+				});
+			}
+
+			document.addEventListener('DOMContentLoaded', () => {
+				const urlParams = new URLSearchParams(window.location.search);
+				const postId = urlParams.get('postId');
+
+				attachVoteEventListeners(postId);
+				attachDeletePostListener();
+				attachEditCommentListener();
+				attachDeleteCommentListener();
+
+				if (postId) {
+					fetchPostDetails(postId);
+					fetchcomments(postId);
+				} else {
+					console.log('Post ID not found in the URL');
+				}
+			});
+	</script>
+</body>
+</html>

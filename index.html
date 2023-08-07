@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html class="login-fix">
+	<head>
+		<title>KAFKAESQUE | Login</title>
+		<link rel="stylesheet" type="text/css" href="./style.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	</head>
+	
+	<body class="login-fix">
+		<main>
+			<div class="loginbg">
+				<img src="../img/BG.png" alt="Game controller background">
+			</div>
+			
+			<div class="login-container">
+				<div class="center-content">
+					<section>
+						<img class="loginlogo" src="../img/Logo_maroon.png" alt="Kafkaesque Logo"><br><br>
+						<h1>KAFKAESQUE</h1>
+						<h3>Welcome back.</h3><br>
+					</section>
+					
+					<section>
+						<form id="Register" action="/html/home.html"> 
+							<input type="text" name="username" id="username" class="login-textbox" autocomplete="off" placeholder="Username" required><br><br>
+							<input type="password" name="password" id="password" class="login-textbox" autocomplete="off" placeholder="Password" required><br><br>
+							<input type="checkbox" name="pw" style="vertical-align: middle;" value="Password" id="remember">
+							<label for="remember" style="vertical-align: middle; font-size: 0.7rem;">Remember password</label><br><br>
+							<input type="submit" name="submit" class="loginbtn" value="Log in"><br><br>
+						</form>						  
+
+						<script>
+							const form = document.getElementById("Register");
+							form.addEventListener("submit", login);
+						  
+							async function login(event) {
+							  event.preventDefault();
+							  const username = document.getElementById("username").value;
+							  const password = document.getElementById("password").value;
+						  
+							  const result = await fetch('/api/login', {
+								method: 'POST',
+								headers: {
+								  'Content-Type': 'application/json'
+								},
+								body: JSON.stringify({
+								  username,
+								  password
+								})
+							  });
+						  
+							  try {
+								const data = await result.json();
+								localStorage.clear();
+								console.log(data);
+								handleLoginResponse(data);
+							  } catch (error) {
+								console.error('Error parsing JSON:', error);
+							  }
+							}
+						  
+							function handleLoginResponse(data) {
+							  if (data.status === 'error') {
+								alert(data.error);
+							  } else {
+								window.location.href = '/html/home.html';
+							  }
+							}
+						  </script>
+											
+					<span class="finetext">Don't have an account? <a href="/html/register.html" class="text-link">Register</a><span>
+				</div>
+			</div>
+		</main>
+	</body>
+</html>

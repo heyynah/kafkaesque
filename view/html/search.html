@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>KAFKAESQUE | Home</title>
+		<link rel="stylesheet" href="../style.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	</head>
+		
+	<body>
+		<nav>
+			<div class="logo" onclick="window.location.href='home.html';">
+				<img class="nav-img" src="../img/Logo_white.png" alt="KAFKAESQUE Logo">
+				<span class="nav-logoname">KAFKAESQUE</span>
+			</div>
+			
+			<div style="width:50%;">
+				<input type="text" class="nav-search" id="searchInput" placeholder="Search...">
+				<img class="search-icon" src="../img/search.png" onclick="performSearch()">
+			</div>
+			
+			<div class="nav-profile" onclick="navigateToUserProfile();">
+				<span class="nav-profilename">Kafka</span>
+				<img class="nav-img" id="nav-user" src="../img/pfp.png" alt="Profile Picture" style="margin-right: 0; padding-right: 0;">
+			</div>
+
+			<script>
+				let loggedInUsername = null;
+
+				async function fetchUserDetails() {
+					try {
+					const profileResponse = await fetch('/api/profile');
+					const profileData = await profileResponse.json();
+
+					if (profileResponse.status === 200) {
+						const usernameElement = document.querySelector('.nav-profilename');
+						const profilePictureElement = document.querySelector('#nav-user');
+
+						loggedInUsername = profileData.data.username;
+
+						usernameElement.textContent = profileData.data.username;
+						profilePictureElement.src = profileData.data.profilepicture;
+
+						// Assuming the user data includes upvotedPosts and downvotedPosts arrays
+						// const upvotedPosts = profileData.data.upvotedPosts;
+						// const downvotedPosts = profileData.data.downvotedPosts;
+					} else {
+						console.log('User not authenticated or user details not found');
+					}
+					} catch (error) {
+					console.error('Error fetching user details:', error);
+					}
+				}
+		  
+				document.addEventListener('DOMContentLoaded', fetchUserDetails);
+			</script>
+		</nav>
+		
+		<main class="main-padding">
+			<section class="col-trending">
+				<span>Trending Games</span><br>
+				
+				<div class="trending-list">
+					<img class="ind-game" src="../img/trending/1.png">
+					<img class="ind-game" src="../img/trending/2.png">
+					<img class="ind-game" src="../img/trending/3.png">
+					<img class="ind-game" src="../img/trending/4.png">
+					<img class="ind-game" src="../img/trending/5.png">
+				</div>
+			</section>
+			
+			<section class="col-main">	
+				<button type="submit" class="back-btn" onclick="window.location.href='../html/home.html';"><img src="/img/postpg/back.png" style="width:30px;"></button>
+						
+				<div class="postContainer">
+					<img src="../img/pepe jr support.png" style="margin-left:30%;">
+				</div>
+			</section>	
+			
+			<section class="col-cat">
+				<span class="cat-title">Categories</span><br>
+				<span class="cat-ind">Action</span><br>
+				<span class="cat-ind">Action-Adventure</span><br>
+				<span class="cat-ind">Adventure</span><br>
+				<span class="cat-ind">Puzzle</span><br>
+				<span class="cat-ind">Role-Playing</span><br>
+				<span class="cat-ind">Simulation</span><br>
+				<span class="cat-ind">Strategy</span><br>
+				<span class="cat-ind">MMO</span><br>
+				<span class="cat-ind">Platformer</span><br>
+				<span class="cat-ind">Board Games</span><br>
+				<span class="cat-ind">Gacha</span><br>			
+			</section>
+		</main>
+		
+		<script>
+			// const voteContainers = document.getElementsByClassName("ind-post");
+
+			async function updatePostViews(postId) {
+				try {
+					await fetch(`/api/views/${postId}`, {
+						method: 'PATCH', // You may use 'PUT' or 'POST' depending on your server's implementation
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({}), // You can send an empty body or any data if needed
+					});
+				} catch (error) {
+					console.error('Error updating post views:', error);
+				}
+			}
+
+			function attachTitleClickListeners() {
+					const postTitles = document.querySelectorAll('.ind-title');
+
+					postTitles.forEach((titleElement) => {
+						console.log(titleElement);
+						titleElement.addEventListener('click', (event) => {
+						event.preventDefault();
+						const postElement = titleElement.closest('.ind-post');
+						const postId = postElement.dataset.postId;
+						updatePostViews(postId);
+						navigateToPost(postId);
+					});
+				});
+			}
+
+			function navigateToUserProfile() {
+				if (loggedInUsername) {
+					const userProfileUrl = `/html/profile.html?username=${encodeURIComponent(loggedInUsername)}`;
+					window.location.href = userProfileUrl;
+				} else {
+					console.error('User is not logged in. Unable to redirect to the profile.');
+				}
+			}
+
+			// Function to handle navigation to a single post
+			function navigateToPost(postId) {
+				const postUrl = `/html/post.html?postId=${encodeURIComponent(postId)}`;
+				window.location.href = postUrl;
+			}
+				
+			function navigateToProfiles(username) {
+				const userProfileUrl = `/html/profile.html?username=${encodeURIComponent(username)}`;
+				window.location.href = userProfileUrl;
+			}
+
+			// Function to add click event listeners to the post-username elements
+			function attachUsernameClickListeners() {
+				const postUsernames = document.querySelectorAll('.post-username');
+
+				postUsernames.forEach((usernameElement) => {
+					usernameElement.addEventListener('click', (event) => {
+						event.preventDefault();
+						const username = event.target.textContent;
+						navigateToProfiles(username);
+					});
+				});
+			}
+
+			function displaySearchResults(searchQuery) {
+				const searchResultDiv = document.querySelector('.postContainer');
+				searchResultDiv.innerHTML = '';
+
+				if (searchQuery.trim() === '') {
+				searchResultDiv.innerHTML = `
+					<div class="search-result" style="margin-left:30%">
+						<img src="../img/pepe jr support.png"><br><br>
+						<span>Please enter a search query</span>
+					</div>
+				`;
+				return;
+				}
+
+				fetch(`/api/results/${searchQuery}`)
+				.then(response => response.json())
+				.then(data => {
+					if (data.posts.length === 0 && data.accounts.length === 0) {
+						searchResultDiv.innerHTML = `
+							<div class="search-result" style="margin-left:30%">
+								<img src="../img/pepe jr support.png"><br><br>
+								<span>No results found :(</span>
+							</div>
+						`;
+					} else {
+					data.posts.forEach(post => {
+						const postElement = createPostElement(post);
+						searchResultDiv.appendChild(postElement);
+						attachTitleClickListeners();
+						attachUsernameClickListeners();
+					});
+
+					data.accounts.forEach(account => {
+						const accountElement = createAccountElement(account);
+						searchResultDiv.appendChild(accountElement);
+						attachUsernameClickListeners();
+					});
+
+					}
+				})
+				.catch(error => {
+					console.error('Error fetching search results:', error);
+					searchResultDiv.innerHTML = '<span>Error fetching search results</span>';
+				});
+			}
+
+			function createPostElement(post) {
+				const postDetailsContainer = document.createElement('div');
+				postDetailsContainer.classList.add('ind-post');
+				postDetailsContainer.dataset.postId = post._id;
+
+				postDetailsContainer.innerHTML = `
+				${post.image ? `
+					<div class="ind-imgcontainer">
+					<img class="ind-img" src="${post.image}">
+					</div>
+				` : ''}
+				<section style="width: 60%;">
+					<h2 class="ind-title">${post.title}</h2>
+					<h4>${post.tags}</h4>
+					<span class="text-preview">${post.description}</span><br>
+					<div class="post-inter">
+					<img src="/img/posts/views.png" style="width: 0.8rem; vertical-align: middle;">
+					<span style="vertical-align: middle;">${post.views}</span>
+					<img src="/img/posts/comments.png" style="width: 0.7rem; vertical-align: middle;">
+					<span style="vertical-align: middle;">${post.commentsCount}</span>
+					<span style="vertical-align: middle;">&nbsp • &nbsp ${new Date(post.createdAt).toLocaleDateString()}</span>
+					</div><br>
+					<span class="post-username">${post.username}</span>
+				</section>
+				`;
+				
+				return postDetailsContainer;
+			}
+
+			function createAccountElement(account) {
+				const accountElement = document.createElement('div');
+				accountElement.classList.add('ind-post');
+
+				accountElement.innerHTML = `
+					<div class="ind-imgcontainer">
+					<img class="ind-img" src="${account.profilepicture}">
+					</div>
+					<section style="width: 75%;">
+						<h2 class="ind-title">${account.displayname}</h2>
+						<h4>${account.location}</h4>
+						<span class="text-preview">${account.bio}</span><br>
+						<span class="post-username">${account.username}</span>
+					</section>
+				`;
+
+				return accountElement;
+			}
+
+			function performSearch() {
+				const searchInput = document.getElementById('searchInput').value;
+				displaySearchResults(searchInput);
+			}
+
+			document.addEventListener('DOMContentLoaded', () => {
+				fetchUserDetails();
+			});
+		</script>
+	</body>
+</html>

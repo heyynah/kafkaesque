@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html class="login-fix">
+	<head>
+		<title>KAFKAESQUE | Register</title>
+		<link rel="stylesheet" href="../style.css">
+	</head>
+	
+	<body class="login-fix">
+		<main>
+			<div class="login-container">
+				<div class="center-content">
+					<section>
+						<img class="loginlogo" src="../img/Logo_maroon.png" alt="Kafkaesque Logo"><br><br>
+						<h1>KAFKAESQUE</h1>
+						<h3>Surreal worlds, oppressive systems, and existential dilemmas await.</h3><br>
+					</section>
+					
+					<form id="reg-form">
+						<input type="text" class="login-textbox" autocomplete="off" id="username" placeholder="Username" required><br><br>
+						<input type="text" class="login-textbox" autocomplete="off" id="password" placeholder="Password" required><br><br>
+						<input type="submit" name="submit" class="loginbtn" id="signupbtn" value="Sign up"><br><br>
+					</form>
+					
+					<script>
+						const form = document.getElementById("reg-form");
+						form.addEventListener("submit", registerUser);
+
+						async function registerUser(event) {
+							event.preventDefault();
+							const username = document.getElementById("username").value;
+							const password = document.getElementById("password").value;
+
+							try {
+								const response = await fetch('/api/register', {
+									method: 'POST',
+									headers: {
+										'Content-Type': 'application/json'
+									},
+									body: JSON.stringify({
+										username,
+										password,
+									})
+								});
+								const data = await response.json();
+								console.log(data)
+								
+								if (data.status === 'error') {
+									alert("username taken");
+								} else {
+									openPopup();
+								}
+								
+							} catch (error) {
+								console.error('Error:', error);
+							}
+						}
+					</script>
+					<span class="finetext">Already have an account? <a href="/" class="text-link">Log in</a><span>
+				</div>
+			</div>
+			
+			<div class="loginbg">
+				<img src="../img/BG.png" alt="Game controller background">
+			</div>
+			
+			<div class="popup" id="popup">
+				<img src="../img/Logo_maroon.png">
+				<p>Thank you for registering with us!</p>
+				<button type="button" onclick = "window.location.href='/';">OK</button>
+			</div>
+		</main>
+		
+		<script>			
+			function openPopup(){
+				document.getElementById("popup").style.display = "block";
+				return true;
+			}
+		</script>
+	</body>
+</html>
