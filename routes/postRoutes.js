@@ -432,7 +432,7 @@ router.get('/results/:searchQuery', async (req, res) => {
   if (searchQuery.trim() !== '') {
     try {
       // Search in posts for matching titles
-      searchResults.posts = await Post.find({ title: { $regex: `^${searchQuery}$`, $options: 'i' } }).lean();
+      searchResults.posts = await Post.find({ title: { $regex: searchQuery, $options: 'i' } }).lean();
 
       searchResults.accounts = await User.find({
         $or: [
