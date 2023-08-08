@@ -308,11 +308,10 @@
 					}
 
 					// Update the page links
-					limit = 15;
 					const posts = await fetch(`/api/totalposts`);
 
 					const totalposts = await posts.json();
-					const totalPages = Math.ceil(totalposts / limit);
+					const totalPages = Math.ceil(totalposts / 15); // limit
 
 					const previousPageLink = document.getElementById('previousPageLink');
 					const nextPageLink = document.getElementById('nextPageLink');
