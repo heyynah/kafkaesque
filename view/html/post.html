@@ -619,19 +619,8 @@
 						<span class="comment-style">${commentData.content}</span>
 
 						<div class="comment-actions">
-							<div class="comment-votes" data-comment-id="${commentId}">
-								<span class="upvote-count" >${commentData.upvotes}</span>
-								<button class="vote-button upvote" data-comment-id="${commentId}">
-									<img class="upvote-image" src="/img/posts/upvote.png" alt="Upvote">
-								</button>
-								<button class="vote-button downvote" data-comment-id="${commentId}">
-									<img class="downvote-image" src="/img/posts/downvote.png" alt="Downvote">
-								</button>
-								<span class="downvote-count">${commentData.downvotes}</span>
-							</div>
-
-							<span>&nbsp | ${replyButton} ${editButton} ${deleteButton} ${cancelButton}</span>
-							<span class="comment-date">${new Date(commentData.createdAt).toLocaleDateString()} ${editedSpan}</span>
+							<span>${replyButton} ${editButton} ${deleteButton} ${cancelButton}</span>
+							<span class="comment-date">${editedSpan}</span>
 						</div>
 
 						<div class="nested-comments">
