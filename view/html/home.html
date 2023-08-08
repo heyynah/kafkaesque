@@ -308,6 +308,7 @@
 					}
 
 					// Update the page links
+					limit = 15;
 					const posts = await fetch(`/api/totalposts`);
 
 					const totalposts = await posts.json();
