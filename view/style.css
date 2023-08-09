@@ -169,6 +169,19 @@ form {
 	cursor: pointer;
 }
 
+#back-to-home {
+    position: absolute;
+    margin: 1rem;
+    opacity: 50%;
+    color: lightgray;
+    top: 0;
+    left: 0;
+}
+
+#back-to-home img {
+    width: 20px;
+}
+
 /* ---------------------- NAVIGATION BAR ----------------------*/
 nav {
 	background-color: var(--maroon);
@@ -209,6 +222,22 @@ nav {
 	padding: 0.5rem;
 	font-family: Karla;
 	color: white;
+}
+
+.nav-login {
+	display: none;
+	vertical-align: middle;
+	padding: 0.2rem 2rem;
+	font-family: Karla;
+	background: var(--maroon);
+	color: white;
+	border: white 1.5px solid;
+	border-radius: 4px;
+}
+
+.nav-login:hover {
+	background: var(--maroonhov);
+	cursor: pointer;
 }
 
 .logo {
@@ -254,7 +283,7 @@ nav {
 }
 
 .col-trending {
-	width: 20%;
+	min-width: 20%;
 }
 
 .col-trending span {
@@ -535,34 +564,35 @@ h4 {
 	cursor: pointer;
 }
 
-.pagination {
-	display: flex;
-	justify-content: center;
-	gap: 0.5rem;
-	margin: auto;
+#pagination {
+    display: flex;
+	text-align: center;
+    gap: 1rem;
+    margin: auto;
+    padding-top: 0.5em;
+    font-weight: bold;
 }
 
-.pagination div {
-	padding-top: 0.5em;
-	font-weight: bold;
+#pagination a {
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
 }
 
-.pagination a {
-	color: white;
-	float: left;
-	padding: 8px 16px;
-	text-decoration: none;
+#pagination a.active {
+    background-color: var(--maroon);
+    color: white;
+    border-radius: 5px;
 }
 
-.pagination a.active {
-	background-color: var(--maroon);
-	color: white;
-	border-radius: 5px;
+#pagination a:hover:not(.active) {
+    background-color: var(--lightmaroon);
+    border-radius: 5px;
 }
 
-.pagination a:hover:not(.active) {
-	background-color: var(--lightmaroon);
-	border-radius: 5px;
+#view-more {
+	display: none;
+    text-align: center;
 }
 
 /* ---------------------- POST PAGE ----------------------*/
@@ -739,7 +769,7 @@ h4 {
 }
 
 #pactions-align {
-	text-align: right;
+	float: right;
 }
 
 .profile-post {
@@ -788,6 +818,8 @@ h4 {
 	cursor: pointer;
 	background-color: var(--maroon);
 }
+
+/* ---------------------- SEARCH PAGE ----------------------*/
 
 .search-result {
 	padding: 2rem;

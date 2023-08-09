@@ -11,16 +11,15 @@ const app = express();
 
 const PORT = 3000;
 
-mongoose.connect('mongodb+srv://hannahteves:imdumb111@kafkaesquedb.xfkeyo8.mongodb.net/', {
+mongoose.connect('mongodb+srv://hannahteves:imdumb111@kafkaesquedb.xfkeyo8.mongodb.net/kafkakakakaka', {
     useNewUrlParser: true,
-    useUnifiedTopology: true,
-    dbName: "kafkakakakaka"
+    useUnifiedTopology: true
     })
     .then(() => console.log('Connected to MongoDB...'))
     .catch(err => console.error('Could not connect to MongoDB...'));
 
 const store = new MongoDBStore({
-    uri: 'mongodb+srv://hannahteves:imdumb111@kafkaesquedb.xfkeyo8.mongodb.net/',
+    uri: 'mongodb+srv://hannahteves:imdumb111@kafkaesquedb.xfkeyo8.mongodb.net/kafkakakakaka',
     collection: 'sessions'
 });
 
@@ -34,7 +33,7 @@ app.use(session({
     saveUninitialized: false,
     store: store,
     cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 21,
+        maxAge: 1000 * 60 * 60 * 24,
     } 
 }));
 
@@ -44,7 +43,7 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '/index.html'));
+    res.sendFile(path.join(__dirname, '/view/html/index.html'));
 });
 
 app.get('/api/posts/:postId', (req, res) => {

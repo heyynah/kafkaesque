@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
 const upload = multer({storage: storage});
 
 router.post('/login', async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password, remember } = req.body;
     const user = await User.findOne({ username }).lean();
 
     if (!user) {
@@ -36,6 +36,10 @@ router.post('/login', async (req, res) => {
         username,
         password,
     };
+
+    if (remember) {
+        req.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 21;
+    }
 
     res.json({ status: 'ok', data: user });
 });
@@ -83,7 +87,7 @@ router.get('/profile/:username', async (req, res) => {
 
 router.get('/profile', async (req, res) => {
     if (!req.session.user) {
-        return res.status(401).json({ status: 'error', error: 'Unauthorized' });
+        return res.status(401).json({ status: 'unauthorized', message: 'User is not authenticated' });
     }
 
     const user = req.session.user;

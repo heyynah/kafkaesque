@@ -3,60 +3,26 @@
 	<head>
 		<title>KAFKAESQUE | Home</title>
 		<link rel="stylesheet" href="../style.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<link rel="icon" type="image/png" href="/img/Logo_maroon.png">
 	</head>
 		
 	<body>
 		<nav>
-			<div class="logo" onclick="window.location.href='/html/home.html'">
+			<div class="logo" onclick="window.location.href='/'">
 			  <img class="nav-img" src="/img/Logo_white.png" alt="KAFKAESQUE Logo">
 			  <span class="nav-logoname">KAFKAESQUE</span>
 			</div>
 		  
-			<div style="display: flex">
-				<img class="search-icon" src="/img/Search.png" style="float:right;" onclick="window.location.href='search.html';">
+			<div class="nav-user" style="display: flex">
+				<img class="search-icon" src="/img/Search.png" style="float:right;" onclick="window.location.href='/html/search.html';">
 				<div class="nav-profile" onclick="navigateToUserProfile()">
-				<span class="nav-profilename"></span>
-				<img class="nav-img" id="nav-user" src="/img/pfp.png" alt="Profile Picture" style="margin-right: 0; padding-right: 0;">
+					<span class="nav-profilename"></span>
+					<img class="nav-img" id="nav-user" src="/img/profiles/default.jpg" alt="Profile Picture" style="margin-right: 0; padding-right: 0;">
 				</div>
 			</div>	
-		  
-			<script>
-				let loggedInUsername = null;
-
-				async function fetchUserDetails() {
-					try {
-					const profileResponse = await fetch('/api/profile');
-					const profileData = await profileResponse.json();
-
-					if (profileResponse.status === 200) {
-						const usernameElement = document.querySelector('.nav-profilename');
-						const profilePictureElement = document.querySelector('#nav-user');
-
-						loggedInUsername = profileData.data.username;
-
-						usernameElement.textContent = profileData.data.username;
-						profilePictureElement.src = profileData.data.profilepicture;
-
-						const upvotedPosts = profileData.data.upvotedPosts;
-						const downvotedPosts = profileData.data.downvotedPosts;
-
-						const urlPage = new URLSearchParams(window.location.search);
-    					const page = parseInt(urlPage.get('page')) || 1;
-
-						loadPosts(activeSortOption, page, 5, upvotedPosts, downvotedPosts);
-					} else {
-						console.log('User not authenticated or user details not found');
-					}
-					} catch (error) {
-					console.error('Error fetching user details:', error);
-					}
-				}
-		  
-				document.addEventListener('DOMContentLoaded', fetchUserDetails);
-			</script>
-		</nav>
-		  
+			<button class="nav-login" onclick="window.location.href = '/html/login.html';">Login</button>
+		</nav>	  
 		
 		<main class="main-padding">
 			<section class="col-trending">
@@ -125,61 +91,9 @@
 						<input type="submit" class="post-btn" value="Post">
 					</div>
 					<input type="file" name="image" class="accept-img" accept="image/*">
-				</form><br>
+				</form>
 				
-				
-				<hr><br>
-			
-				<script>
-					const form = document.getElementById('post-form');
-					form.addEventListener('submit', handleSubmit);
-
-					async function handleSubmit(event) {
-						event.preventDefault();
-
-						const title = document.querySelector('.post-title').value;
-						const description = document.querySelector('.post-textbox').value;
-						const imageFile = document.querySelector('.accept-img').files[0];
-
-						const selectedCategories = [];
-						const categoryCheckboxes = document.querySelectorAll('.category input[type="checkbox"]:checked');
-						categoryCheckboxes.forEach(checkbox => {
-							selectedCategories.push(checkbox.value);
-						});
-
-						if (!title || !description) {
-							alert('Please provide both title and description for your post.');
-							return;
-						}
-
-						const formData = new FormData();
-						formData.append('title', title);
-						formData.append('description', description);
-						if (imageFile) {
-							formData.append('image', imageFile);
-						}
-						formData.append('categories', JSON.stringify(selectedCategories));
-
-						try {
-							const response = await fetch('/api/add-post', {
-								method: 'POST',
-								body: formData,
-							});
-
-							if (response.ok) {
-								alert('Your post has been shared!');
-								window.location.reload();
-								loadPosts();
-							} else {
-								alert('Failed to add post. Please try again later.');
-							}
-						} catch (error) {
-							console.error('Error adding post:', error);
-							alert('An error occurred. Please try again later.');
-						}
-					}
-
-				</script>
+				<br><hr><br>
 
 				<div class="post-rank">
 					<button class="popular-btn" id="popularBtn">
@@ -192,16 +106,18 @@
 				</div><br>
 
 				<div id="postContainer">
-					<!-- Posts are added here -->			
+					<!-- Posts are dynamically added here -->			
 				</div>
 
 				<br><hr><br>
 
-				<div class="pagination">
+				<div id="pagination">
 					<a id="previousPageLink" href="?page=1">&laquo; Previous</a>
-					<div id="currentPage"></div>
+					<span id="currentPage"></span>
 					<a id="nextPageLink" href="?page=2">Next &raquo;</a>
 				</div>	
+				
+				<div id="view-more"><span>Login to view more posts!</span></div>
 			</section>	
 			
 			<section class="col-cat">
@@ -221,16 +137,138 @@
 		</main>
 		
 		<script>
-			let activeSortOption = 'newest';
-			const postContainer = document.getElementById('postContainer');
-			
+			let loggedInUsername = null;
+			let activeSortOption = 'newest'; // Default sort option
+			let limit = 15; // Number of posts to fetch per page
 			const updatedViews = {}; // Keep track of updated views to prevent multiple updates
+			const postContainer = document.getElementById('postContainer');
+
+			/* ------------------------------ FETCH USER DETAILS ------------------------------*/
+			async function fetchUserDetails() {
+				try {
+					const profileResponse = await fetch('/api/profile');
+					const profileData = await profileResponse.json();
+
+					const urlPage = new URLSearchParams(window.location.search);
+					const page = parseInt(urlPage.get('page')) || 1;
+
+					if (profileResponse.status === 200) {
+						document.querySelector('.nav-login').style.display = 'none';
+						document.querySelector('.nav-user').style.display = 'flex';
+
+						const usernameElement = document.querySelector('.nav-profilename');
+						const profilePictureElement = document.querySelector('#nav-user');
+
+						loggedInUsername = profileData.data.username;
+
+						usernameElement.textContent = profileData.data.username;
+						profilePictureElement.src = profileData.data.profilepicture;
+
+						const upvotedPosts = profileData.data.upvotedPosts;
+						const downvotedPosts = profileData.data.downvotedPosts;
+
+						loadPosts(activeSortOption, page, limit, upvotedPosts, downvotedPosts);
+					} else if (profileResponse.status === 401) {
+						// User not found in the database, hide user-related elements
+						document.querySelector('.nav-user').style.display = 'none';
+						document.querySelector('.nav-login').style.display = 'block';
+						loadPosts(activeSortOption, page, limit);
+    				} else {
+						console.log('User not authenticated or user details not found');
+					}
+				} catch (error) {
+					console.error('Error fetching user details:', error);
+				}
+			}
+
+			/* ------------------------------ CREATE POST ------------------------------*/
+			const form = document.getElementById('post-form');
+			form.addEventListener('submit', handleSubmit);
+
+			async function handleSubmit(event) {
+				event.preventDefault();
+
+				const title = document.querySelector('.post-title').value;
+				const description = document.querySelector('.post-textbox').value;
+				const imageFile = document.querySelector('.accept-img').files[0];
+
+				const selectedCategories = [];
+				const categoryCheckboxes = document.querySelectorAll('.category input[type="checkbox"]:checked');
+				categoryCheckboxes.forEach(checkbox => {
+					selectedCategories.push(checkbox.value);
+				});
+
+				if (!title || !description) {
+					alert('Please provide both title and description for your post.');
+					return;
+				}
+
+				const formData = new FormData();
+				formData.append('title', title);
+				formData.append('description', description);
+				if (imageFile) {
+					formData.append('image', imageFile);
+				}
+				formData.append('categories', JSON.stringify(selectedCategories));
+
+				if (loggedInUsername) {
+					try {
+						const response = await fetch('/api/add-post', {
+							method: 'POST',
+							body: formData,
+						});
+
+						if (response.ok) {
+							alert('Your post has been shared!');
+							window.location.reload();
+							loadPosts();
+						} else {
+							alert('Failed to add post. Please try again later.');
+						}
+					} catch (error) {
+						console.error('Error adding post:', error);
+						alert('An error occurred. Please try again later.');
+					}
+				} else {
+					alert('Please log in to share a post.');
+					clearPostForm();
+				}
+			}
+
+			function clearPostForm() {
+				document.querySelector('.post-title').value = '';
+				document.querySelector('.post-textbox').value = '';
+				document.querySelector('.accept-img').value = '';
+				document.querySelectorAll('.category input[type="checkbox"]:checked').forEach(checkbox => {
+					checkbox.checked = false;
+				});
+			}
+
+			/* ------------------------------ LOAD POSTS ------------------------------*/
+			function toggleSortButtons() {
+				const popularBtn = document.getElementById('popularBtn');
+				const newestBtn = document.getElementById('newestBtn');
+
+				popularBtn.classList.toggle('active');
+				newestBtn.classList.toggle('active');
+
+				activeSortOption = popularBtn.classList.contains('active') ? 'popular' : 'newest';
+
+				// const url = new URL('/home', window.location.origin);
+				const url = new URL(window.location.href);
+				url.searchParams.set('sort', activeSortOption);
+				url.searchParams.set('page', '1');
+				// history.pushState(null, null, url.toString());
+				history.pushState(null, null, url);
+				
+				loadPosts(activeSortOption, 1);
+			}
 
 			async function loadPosts(sortBy = 'newest', page = 1, limit = 15, upvotedPosts = [], downvotedPosts = []) {
 				try {
 					let sortOption = sortBy === 'popular' ? 'popular' : 'newest';
 
-					const response = await fetch(`/api/displayPosts/${sortBy}?page=${page}`);
+					const response = await fetch(`/api/displayPosts/${sortBy}?page=${page}&limit=${limit}`);
 
 					const postsData = await response.json();
 					if (!Array.isArray(postsData)) {
@@ -239,7 +277,6 @@
 					}
 
 					postContainer.innerHTML = '';
-
 
 					postsData.forEach(data => {
 						const postElement = document.createElement('div');
@@ -293,7 +330,7 @@
 						// Update the postContainer
 						postContainer.appendChild(postElement);
 
-						// Call the function and pass the postId as an argument
+						// Attach event listeners to the buttons & redirect links
 						attachVoteEventListeners(postElement);
 						attachTitleClickListeners();
 						attachUsernameClickListeners();
@@ -314,21 +351,41 @@
 					const posts = await fetch(`/api/totalposts`);
 
 					const totalposts = await posts.json();
-					const totalPages = Math.ceil(totalposts / 15); // limit
+					const totalPages = Math.ceil(totalposts / limit);
 
 					const previousPageLink = document.getElementById('previousPageLink');
 					const nextPageLink = document.getElementById('nextPageLink');
 
+					if (!loggedInUsername) {
+						const pageButtons = document.getElementById('pagination');
+						pageButtons.style.display = 'none';
+
+						const viewMore = document.getElementById('view-more');
+						viewMore.style.display = 'block';
+
+						return;
+					} else {
+						const pageButtons = document.getElementById('pagination');
+						pageButtons.style.display = 'block';
+
+						const viewMore = document.getElementById('view-more');
+						viewMore.style.display = 'none';
+					}
+
 					if (page === 1) {
-						previousPageLink.href = `?sort=${activeSortOption}&page=${page}`;
+						previousPageLink.removeAttribute('href');
+						previousPageLink.style.pointerEvents = 'none';
 					} else {
 						previousPageLink.href = `?sort=${activeSortOption}&page=${page - 1}`;
+						previousPageLink.style.pointerEvents = 'auto';
 					}
 
 					if (page === totalPages) {
-						nextPageLink.href = `?sort=${activeSortOption}&page=${page}`;
+						nextPageLink.removeAttribute('href');
+						nextPageLink.style.pointerEvents = 'none';
 					} else {
 						nextPageLink.href = `?sort=${activeSortOption}&page=${page + 1}`;
+						nextPageLink.style.pointerEvents = 'auto';
 					}
 
 					// Update the page number
@@ -347,24 +404,8 @@
 				}
 				return text;
 			}
-
-			function toggleSortButtons() {
-				const popularBtn = document.getElementById('popularBtn');
-				const newestBtn = document.getElementById('newestBtn');
-
-				popularBtn.classList.toggle('active');
-				newestBtn.classList.toggle('active');
-
-				activeSortOption = popularBtn.classList.contains('active') ? 'popular' : 'newest';
-
-				const url = new URL(window.location.href);
-				url.searchParams.set('sort', activeSortOption);
-				url.searchParams.set('page', '1');
-				history.pushState(null, null, url);
-				
-				loadPosts(activeSortOption, 1);
-			}
-
+			
+			// Function to update the post views when the user clicks on a post
 			async function updatePostViews(postId) {
 				try {
 					await fetch(`/api/views/${postId}`, {
@@ -378,7 +419,8 @@
 					console.error('Error updating post views:', error);
 				}
 			}
-			
+
+			/* ------------------------------ EVENT LISTENERS ------------------------------ */			
 			function attachVoteEventListeners(voteContainer) {
 				const upvoteButton = voteContainer.querySelector(".upvote");
 				const downvoteButton = voteContainer.querySelector(".downvote");
@@ -398,63 +440,74 @@
 				}
 
 				upvoteButton.addEventListener("click", async () => {
+					// Alert the user to login if they want to vote
+					if (loggedInUsername === null) {
+						alert("You must be logged in to vote!");
+						return;
+					}
+
 					try {
-					const postId = findPostId(); // Get the postId from the dataset attribute
+						const postId = findPostId(); // Get the postId from the dataset attribute
 
-					if (upvoteButton.classList.contains("voted")) {
-						// User has already upvoted, decrement the counter and remove the vote
-						upvoteCounter--;
-						upvoteButton.classList.remove("voted");
-						localStorage.removeItem(`${postId}_vote`);
+						if (upvoteButton.classList.contains("voted")) {
+							// User has already upvoted, decrement the counter and remove the vote
+							upvoteCounter--;
+							upvoteButton.classList.remove("voted");
+							localStorage.removeItem(`${postId}_vote`);
 
-						// Send an HTTP PATCH request to remove the upvote from the server
-						await fetch(`/api/posts/${postId}/vote`, {
-						method: "PATCH",
-						headers: {
-							"Content-Type": "application/json",
-						},
-						body: JSON.stringify({ voteType: "remove_upvote" }),
-						});
-					} else {
-						// User is upvoting, increment the counter and set the vote
-						upvoteCounter++;
-						upvoteButton.classList.add("voted");
-						localStorage.setItem(`${postId}_vote`, "upvote");
-						localStorage.removeItem(`${postId}_downvote`);
+							// Send an HTTP PATCH request to remove the upvote from the server
+							await fetch(`/api/posts/${postId}/vote`, {
+							method: "PATCH",
+							headers: {
+								"Content-Type": "application/json",
+							},
+							body: JSON.stringify({ voteType: "remove_upvote" }),
+							});
+						} else {
+							// User is upvoting, increment the counter and set the vote
+							upvoteCounter++;
+							upvoteButton.classList.add("voted");
+							localStorage.setItem(`${postId}_vote`, "upvote");
+							localStorage.removeItem(`${postId}_downvote`);
 
-						// If downvoteButton is active, decrease its counter and remove the downvote
-						if (downvoteButton.classList.contains("voted")) {
-							downvoteCounter--;
-							downvoteButton.classList.remove("voted");
+							// If downvoteButton is active, decrease its counter and remove the downvote
+							if (downvoteButton.classList.contains("voted")) {
+								downvoteCounter--;
+								downvoteButton.classList.remove("voted");
 
+								await fetch(`/api/posts/${postId}/vote`, {
+									method: "PATCH",
+									headers: {
+									"Content-Type": "application/json",
+									},
+									body: JSON.stringify({ voteType: "remove_downvote" }),
+								});
+							}
+
+							// Send an HTTP PATCH request to remove the downvote and add an upvote to the server
 							await fetch(`/api/posts/${postId}/vote`, {
 								method: "PATCH",
 								headers: {
 								"Content-Type": "application/json",
 								},
-								body: JSON.stringify({ voteType: "remove_downvote" }),
+								body: JSON.stringify({ voteType: "upvote" }),
 							});
 						}
 
-						// Send an HTTP PATCH request to remove the downvote and add an upvote to the server
-						await fetch(`/api/posts/${postId}/vote`, {
-							method: "PATCH",
-							headers: {
-							"Content-Type": "application/json",
-							},
-							body: JSON.stringify({ voteType: "upvote" }),
-						});
-					}
-
-					// Update the vote count elements
-					upvoteCount.textContent = upvoteCounter.toString();
-					downvoteCount.textContent = downvoteCounter.toString();
+						// Update the vote count elements
+						upvoteCount.textContent = upvoteCounter.toString();
+						downvoteCount.textContent = downvoteCounter.toString();
 					} catch (error) {
 					console.error("Error upvoting post:", error);
 					}
 				});
 
 				downvoteButton.addEventListener("click", async () => {
+					if (loggedInUsername === null) {
+						alert("You must be logged in to vote!");
+						return;
+					}
+
 					try {
 					const postId = findPostId(); // Get the postId from the dataset attribute
 
@@ -538,27 +591,6 @@
 				});
 			}
 
-			function navigateToUserProfile() {
-				if (loggedInUsername) {
-					const userProfileUrl = `/html/profile.html?username=${encodeURIComponent(loggedInUsername)}`;
-					window.location.href = userProfileUrl;
-				} else {
-					console.error('User is not logged in. Unable to redirect to the profile.');
-				}
-			}
-
-			// Function to handle navigation to a single post
-			function navigateToPost(postId) {
-				const postUrl = `/html/post.html?postId=${encodeURIComponent(postId)}`;
-				window.location.href = postUrl;
-			}
-				
-			function navigateToProfiles(username) {
-				const userProfileUrl = `/html/profile.html?username=${encodeURIComponent(username)}`;
-				window.location.href = userProfileUrl;
-			}
-
-			// Function to add click event listeners to the post-username elements
 			function attachUsernameClickListeners() {
 				const postUsernames = document.querySelectorAll('.post-username');
 
@@ -571,7 +603,31 @@
 				});
 			}
 
+			/* ------------------------------ NAVIGATION ------------------------------ */
+			function navigateToUserProfile() {
+				if (loggedInUsername) {
+					const userProfileUrl = `/html/profile.html?username=${encodeURIComponent(loggedInUsername)}`;
+					window.location.href = userProfileUrl;
+				} else {
+					console.error('User is not logged in. Unable to redirect to the profile.');
+				}
+			}
+
+			function navigateToPost(postId) {
+				const postUrl = `/html/post.html?postId=${encodeURIComponent(postId)}`;
+				window.location.href = postUrl;
+			}
+				
+			function navigateToProfiles(username) {
+				const userProfileUrl = `/html/profile.html?username=${encodeURIComponent(username)}`;
+				window.location.href = userProfileUrl;
+			}
+
+			/* ------------------------------ LOAD BROWSER ------------------------------ */
 			document.addEventListener('DOMContentLoaded', () => {
+				// Check if the user is logged in
+				fetchUserDetails();
+
 				const popularBtn = document.getElementById('popularBtn');
 				const newestBtn = document.getElementById('newestBtn');
 
@@ -590,7 +646,6 @@
 						toggleSortButtons();
 					}
 				});
-
 			});
 
 		</script>

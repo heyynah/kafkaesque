@@ -2,7 +2,7 @@
 <html class="login-fix">
 	<head>
 		<title>KAFKAESQUE | Login</title>
-		<link rel="stylesheet" type="text/css" href="./style.css">
+		<link rel="stylesheet" type="text/css" href="/style.css">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<link rel="icon" type="image/png" href="/img/Logo_maroon.png">
 	</head>
@@ -13,6 +13,11 @@
 				<img src="../img/BG.png" alt="Game controller background">
 			</div>
 			
+			<button type="submit" class="back-btn" id="back-to-home" onclick="window.location.href='/';">
+				<img src="/img/back.png">
+				<span>Back to Home Page</span>
+			</button>
+
 			<div class="login-container">
 				<div class="center-content">
 					<section>
@@ -22,11 +27,11 @@
 					</section>
 					
 					<section>
-						<form id="Register" action="/html/home.html"> 
+						<form id="Register"> 
 							<input type="text" name="username" id="username" class="login-textbox" autocomplete="off" placeholder="Username" required><br><br>
 							<input type="password" name="password" id="password" class="login-textbox" autocomplete="off" placeholder="Password" required><br><br>
-							<input type="checkbox" name="pw" style="vertical-align: middle;" value="Password" id="remember">
-							<label for="remember" style="vertical-align: middle; font-size: 0.7rem;">Remember password</label><br><br>
+							<input type="checkbox" name="pw" style="vertical-align: middle;" value="remember" id="remember">
+							<label for="remember" style="vertical-align: middle; font-size: 0.7rem;">Remember me</label><br><br>
 							<input type="submit" name="submit" class="loginbtn" value="Log in"><br><br>
 						</form>						  
 
@@ -35,41 +40,42 @@
 							form.addEventListener("submit", login);
 						  
 							async function login(event) {
-							  event.preventDefault();
-							  const username = document.getElementById("username").value;
-							  const password = document.getElementById("password").value;
+								event.preventDefault();
+								const username = document.getElementById("username").value;
+								const password = document.getElementById("password").value;
+								const remember = document.getElementById("remember").checked;
+							
+								const result = await fetch('/api/login', {
+									method: 'POST',
+									headers: {
+										'Content-Type': 'application/json'
+									},
+									body: JSON.stringify({
+										username,
+										password,
+										remember
+									})
+								});
 						  
-							  const result = await fetch('/api/login', {
-								method: 'POST',
-								headers: {
-								  'Content-Type': 'application/json'
-								},
-								body: JSON.stringify({
-								  username,
-								  password
-								})
-							  });
-						  
-							  try {
-								const data = await result.json();
-								localStorage.clear();
-								console.log(data);
-								handleLoginResponse(data);
-							  } catch (error) {
-								console.error('Error parsing JSON:', error);
-							  }
+								try {
+									const data = await result.json();
+									localStorage.clear();
+									handleLoginResponse(data);
+								} catch (error) {
+									console.error('Error parsing JSON:', error);
+								}
 							}
 						  
 							function handleLoginResponse(data) {
 							  if (data.status === 'error') {
 								alert(data.error);
 							  } else {
-								window.location.href = '/html/home.html';
+								window.location.href = '/';
 							  }
 							}
 						  </script>
 											
-					<span class="finetext">Don't have an account? <a href="/html/register.html" class="text-link">Register</a><span>
+					<span class="finetext">Don't have an account? <a href="/html/register.html" class="text-link">Register</a><span><br><br>
 				</div>
 			</div>
 		</main>

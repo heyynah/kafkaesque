@@ -3,27 +3,89 @@
 	<head>
 		<title>KAFKAESQUE | View Post</title>
 		<link rel="stylesheet" href="../style.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<link rel="icon" type="image/png" href="/img/Logo_maroon.png">
 	</head>
 
 	<body>
 		<nav>
-			<div class="logo" onclick="window.location.href='/html/home.html';">
-			<img class="nav-img" src="/img/Logo_white.png" alt="KAFKAESQUE Logo">
-			<span class="nav-logoname">KAFKAESQUE</span>
+			<div class="logo" onclick="window.location.href='/'">
+			  <img class="nav-img" src="/img/Logo_white.png" alt="KAFKAESQUE Logo">
+			  <span class="nav-logoname">KAFKAESQUE</span>
 			</div>
-
-			<div style="display: flex">
-				<img class="search-icon" src="/img/Search.png" style="float:right;" onclick="window.location.href='search.html';">
+		  
+			<div class="nav-user" style="display: flex">
+				<img class="search-icon" src="/img/Search.png" style="float:right;" onclick="window.location.href='/html/search.html';">
 				<div class="nav-profile" onclick="navigateToUserProfile()">
-				<span class="nav-profilename"></span>
-				<img class="nav-img" id="nav-user" src="/img/pfp.png" alt="Profile Picture" style="margin-right: 0; padding-right: 0;">
+					<span class="nav-profilename"></span>
+					<img class="nav-img" id="nav-user" src="/img/profiles/default.jpg" alt="Profile Picture" style="margin-right: 0; padding-right: 0;">
 				</div>
 			</div>	
+			<button class="nav-login" onclick="window.location.href = '/html/login.html';">Login</button>
+		</nav>	
 
-			<script>
-				async function fetchUserDetails() {
-					try {
+		<main class="main-padding">
+			<section class="profile-main">
+				<button type="submit" class="back-btn" onclick="window.location.href='/';"><img src="../img/back.png" style="width:30px;"></button>
+
+				<div class="profile-display">
+					<div class="postpg-pfp-container">
+						<img class="postpg-pfp" id="user-profile-picture" alt="Profile Picture">
+					</div>
+
+					<section style="width: 70%; padding: 0.5rem;">
+						<span class="postpg-title" style="color: white;" id="user-profile-displayname"></span><br>
+						<span class="postpg-username" style="color: #FFBFCB;" id="user-profile-username"></span>
+
+						<div class="profile-location">
+							<img src="../img/location.png" style="width: 0.45rem; vertical-align: middle;">
+							<span style="vertical-align: middle;" id="user-profile-location"></span>
+						</div>
+					</section>
+
+					<div id="pactions-align">
+						<button type="submit" class="profile-actions" id="editBtn" onclick="editProfile()">EDIT PROFILE</button>
+						<button type="submit" class="profile-actions" id="logoutBtn" onclick="logoutUser()">LOG OUT</button>
+					</div>
+				</div>
+
+				<div class="postpg-content">
+					<span id='user-bio'></span>
+				</div>
+
+				<hr><br>
+
+				<div class="post-rank">
+					<button class="popular-btn" id="popularBtn">Posts</button>
+					<button class="newest-btn" id="newestBtn">Comments</button>
+				</div><br>
+
+				<div class="profile-post">
+					<!-- Replace this part with dynamically loaded user posts -->
+				</div>
+
+				<div class="profile-comments" style="display: none;">
+					<!-- The comments will be dynamically inserted here -->
+				</div>
+
+				<!-- <button class="load-more-btn" id="loadMoreBtn">Load More</button> -->
+			</section>
+		</main>
+
+		<script>
+			let loggedInUsername = null;
+			let offset = 0;
+			const limit = 5;
+
+			/* ------------------------------ GET URL ------------------------------*/
+			function getQueryParam(param) {
+				const urlParams = new URLSearchParams(window.location.search);
+				return urlParams.get(param);
+			}
+
+			/* ------------------------------ FETCH USER DETAILS ------------------------------*/
+			async function fetchUserDetails() {
+				try {
 					const profileResponse = await fetch('/api/profile');
 					const profileData = await profileResponse.json();
 
@@ -41,282 +103,48 @@
 						const downvotedPosts = profileData.data.downvotedPosts;
 
 						fetchUserPosts(upvotedPosts, downvotedPosts);
-					} else {
+					} else if (profileResponse.status === 401) {
+						// User not found in the database, hide user-related elements
+						document.querySelector('.nav-user').style.display = 'none';
+						document.querySelector('.nav-login').style.display = 'block';
+						fetchUserPosts([], []);
+    				} else {	
 						console.log('User not authenticated or user details not found');
 					}
-					} catch (error) {
-					console.error('Error fetching user details:', error);
-					}
-				}
-			</script>
-		</nav>
-
-		<main class="main-padding">
-		<section class="profile-main">
-		<button type="submit" class="back-btn" onclick="window.location.href='/html/home.html';"><img src="../img/postpg/back.png" style="width:30px;"></button>
-
-		<div class="profile-display">
-			<div class="postpg-pfp-container">
-			<img class="postpg-pfp" id="user-profile-picture" alt="Profile Picture">
-			</div>
-
-			<section style="width: 70%; padding: 0.5rem;">
-			<span class="postpg-title" style="color: white;" id="user-profile-displayname"></span><br>
-			<span class="postpg-username" style="color: #FFBFCB;" id="user-profile-username"></span>
-
-			<div class="profile-location">
-				<img src="../img/location.png" style="width: 0.45rem; vertical-align: middle;">
-				<span style="vertical-align: middle;" id="user-profile-location"></span>
-			</div>
-			</section>
-
-			<div id="pactions-align">
-				<button type="submit" class="profile-actions" id="editBtn" onclick="editProfile()">EDIT PROFILE</button>
-				<button type="submit" class="profile-actions" id="logoutBtn" onclick="logoutUser()">LOG OUT</button>
-			</div>
-		</div>
-
-		<div class="postpg-content">
-			<span id='user-bio'></span>
-		</div>
-
-		<hr><br>
-
-		<div class="post-rank">
-            <button class="popular-btn" id="popularBtn">Posts</button>
-            <button class="newest-btn" id="newestBtn">Comments</button>
-        </div><br>
-
-        <div class="profile-post">
-            <!-- Replace this part with dynamically loaded user posts -->
-        </div>
-
-        <div class="profile-comments" style="display: none;">
-            <!-- The comments will be dynamically inserted here -->
-        </div>
-
-		<!-- <button class="load-more-btn" id="loadMoreBtn">Load More</button> -->
-		</section>
-		</main>
-
-		<script>
-		let loggedInUsername;
-		let offset = 0;
-		const limit = 5;
-
-		function getQueryParam(param) {
-			const urlParams = new URLSearchParams(window.location.search);
-			return urlParams.get(param);
-		}
-
-		function navigateToUserProfile() {
-			const username = getQueryParam('username');
-			const userProfileUrl = `/html/profile.html?username=${encodeURIComponent(username)}`;
-			window.location.href = userProfileUrl;
-		}
-
-		function attachTitleClickListeners() {
-			const postTitles = document.querySelectorAll('.ind-title');
-
-				postTitles.forEach((titleElement) => {
-				titleElement.addEventListener('click', (event) => {
-					event.preventDefault();
-					const postElement = titleElement.closest('.ind-post');
-					const postId = postElement.dataset.postId;
-					navigateToPost(postId);
-				});
-			});
-		}
-
-		function navigateToPost(postId) {
-			const postUrl = `/html/post.html?postId=${encodeURIComponent(postId)}`;
-			window.location.href = postUrl;
-		}
-			
-		function navigateToProfiles(username) {
-			const userProfileUrl = `/html/profile.html?username=${encodeURIComponent(username)}`;
-			window.location.href = userProfileUrl;
-		}
-
-		function attachUsernameClickListeners() {
-			const postUsernames = document.querySelectorAll('.post-username');
-
-			postUsernames.forEach((usernameElement) => {
-				usernameElement.addEventListener('click', (event) => {
-					event.preventDefault();
-					const username = event.target.textContent;
-					navigateToProfiles(username);
-				});
-			});
-		}
-
-		function toggleDisplayPosts() {
-			const postsContainer = document.querySelector('.profile-post');
-			const commentsContainer = document.querySelector('.profile-comments');
-			const popularBtn = document.getElementById('popularBtn');
-
-			popularBtn.classList.toggle('active');
-			newestBtn.classList.remove('active');
-			postsContainer.style.display = 'block';
-			commentsContainer.style.display = 'none';
-		}
-
-		function toggleDisplayComments() {
-			const postsContainer = document.querySelector('.profile-post');
-			const commentsContainer = document.querySelector('.profile-comments');
-			const newestBtn = document.getElementById('newestBtn');
-
-			popularBtn.classList.remove('active');
-			newestBtn.classList.toggle('active');
-			postsContainer.style.display = 'none';
-			commentsContainer.style.display = 'block';
-
-			// Display the comments for the current user's posts
-			displayComments();
-		}
-
-		function attachVoteEventListeners(voteContainer) {
-			const upvoteButton = voteContainer.querySelector(".upvote");
-			const downvoteButton = voteContainer.querySelector(".downvote");
-			const upvoteCount = voteContainer.querySelector(".upvote-count");
-			const downvoteCount = voteContainer.querySelector(".downvote-count");
-
-			let upvoteCounter = parseInt(upvoteCount.textContent);
-			let downvoteCounter = parseInt(downvoteCount.textContent);
-
-		// Function to find the postId from the voteContainer
-			function findPostId() {
-				const postContainer = voteContainer.closest(".ind-post");
-				if (postContainer) {
-				return postContainer.dataset.postId;
-				}
-				return null;
-			}
-
-			upvoteButton.addEventListener("click", async () => {
-				try {
-				const postId = findPostId(); // Get the postId from the dataset attribute
-
-				if (upvoteButton.classList.contains("voted")) {
-					// User has already upvoted, decrement the counter and remove the vote
-					upvoteCounter--;
-					upvoteButton.classList.remove("voted");
-					localStorage.removeItem(`${postId}_vote`);
-
-					// Send an HTTP PATCH request to remove the upvote from the server
-					await fetch(`/api/posts/${postId}/vote`, {
-					method: "PATCH",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({ voteType: "remove_upvote" }),
-					});
-				} else {
-					// User is upvoting, increment the counter and set the vote
-					upvoteCounter++;
-					upvoteButton.classList.add("voted");
-					localStorage.setItem(`${postId}_vote`, "upvote");
-					localStorage.removeItem(`${postId}_downvote`);
-
-					// If downvoteButton is active, decrease its counter and remove the downvote
-					if (downvoteButton.classList.contains("voted")) {
-						downvoteCounter--;
-						downvoteButton.classList.remove("voted");
-
-						await fetch(`/api/posts/${postId}/vote`, {
-							method: "PATCH",
-							headers: {
-							"Content-Type": "application/json",
-							},
-							body: JSON.stringify({ voteType: "remove_downvote" }),
-						});
-					}
-
-					// Send an HTTP PATCH request to remove the downvote and add an upvote to the server
-					await fetch(`/api/posts/${postId}/vote`, {
-						method: "PATCH",
-						headers: {
-						"Content-Type": "application/json",
-						},
-						body: JSON.stringify({ voteType: "upvote" }),
-					});
-				}
-
-				// Update the vote count elements
-				upvoteCount.textContent = upvoteCounter.toString();
-				downvoteCount.textContent = downvoteCounter.toString();
 				} catch (error) {
-				console.error("Error upvoting post:", error);
+				console.error('Error fetching user details:', error);
 				}
-			});
-
-			downvoteButton.addEventListener("click", async () => {
-				try {
-				const postId = findPostId(); // Get the postId from the dataset attribute
-
-				if (downvoteButton.classList.contains("voted")) {
-					// User has already downvoted, decrement the counter and remove the vote
-					downvoteCounter--;
-					downvoteButton.classList.remove("voted");
-					localStorage.removeItem(`${postId}_vote`);
-					// Send an HTTP PATCH request to remove the downvote from the server
-					await fetch(`/api/posts/${postId}/vote`, {
-					method: "PATCH",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({ voteType: "remove_downvote" }),
-					});
-				} else {
-					// User is downvoting, increment the counter and set the vote
-					downvoteCounter++;
-					downvoteButton.classList.add("voted");
-					localStorage.setItem(`${postId}_vote`, "downvote");
-					localStorage.removeItem(`${postId}_upvote`);
-
-					// If upvoteButton is active, decrease its counter and remove the upvote
-					if (upvoteButton.classList.contains("voted")) {
-					upvoteCounter--;
-					upvoteButton.classList.remove("voted");
-
-					await fetch(`/api/posts/${postId}/vote`, {
-						method: "PATCH",
-						headers: {
-						"Content-Type": "application/json",
-						},
-						body: JSON.stringify({ voteType: "remove_upvote" }),
-					});
-					}
-
-					// Send an HTTP PATCH request to remove the upvote and add a downvote to the server
-					await fetch(`/api/posts/${postId}/vote`, {
-						method: "PATCH",
-						headers: {
-						"Content-Type": "application/json",
-						},
-						body: JSON.stringify({ voteType: "downvote" }),
-					});
-				}
-
-				// Update the vote count elements
-				upvoteCount.textContent = upvoteCounter.toString();
-				downvoteCount.textContent = downvoteCounter.toString();
-				} catch (error) {
-				console.error("Error downvoting post:", error);
-				}
-			});
-
-		// Check the local storage for user vote when attaching event listeners
-			const postId = findPostId();
-			const userVote = localStorage.getItem(`${postId}_vote`);
-
-			if (userVote === "upvote") {
-				upvoteButton.classList.add("voted");
-			} else if (userVote === "downvote") {
-				downvoteButton.classList.add("voted");
-			}
 			}
 
+			/* ------------------------------ TOGGLE DISPLAY ------------------------------*/
+			function toggleDisplayPosts() {
+				console.log('toggleDisplayPosts');
+				const postsContainer = document.querySelector('.profile-post');
+				const commentsContainer = document.querySelector('.profile-comments');
+				const popularBtn = document.getElementById('popularBtn');
+
+				popularBtn.classList.toggle('active');
+				newestBtn.classList.remove('active');
+				postsContainer.style.display = 'block';
+				commentsContainer.style.display = 'none';
+			}
+
+			function toggleDisplayComments() {
+				console.log('toggleDisplayComments');
+				const postsContainer = document.querySelector('.profile-post');
+				const commentsContainer = document.querySelector('.profile-comments');
+				const newestBtn = document.getElementById('newestBtn');
+
+				popularBtn.classList.remove('active');
+				newestBtn.classList.toggle('active');
+				postsContainer.style.display = 'none';
+				commentsContainer.style.display = 'block';
+
+				// Display the comments for the current user's posts
+				displayComments();
+			}
+
+			/* ------------------------------ FETCH USER DETAILS ------------------------------*/
 			async function fetchUserProfile(username) {
 				try {
 					const response = await fetch(`/api/profile/${username}`);
@@ -350,13 +178,13 @@
 				}
 			}
 
+			/* ------------------------------ FETCH USER POSTS ------------------------------*/
 			async function fetchUserPosts(upvotedPosts, downvotedPosts) {
 				try {
 					const urlSearchParams = new URLSearchParams(window.location.search);
 					const params = Object.fromEntries(urlSearchParams.entries());
 					const username = params.username;
 
-					// Use backticks for the template literal to include the username in the URL
 					const response = await fetch(`/api/user-posts/${username}`);
 
 					if (!response.ok) {
@@ -364,7 +192,6 @@
 					}
 					const userPosts = await response.json();
 
-					console.log(userPosts)
 					if (!Array.isArray(userPosts)) {
 						console.error('Invalid user posts data. Expected an array.');
 						return;
@@ -383,46 +210,52 @@
 					profilePostContainer.innerHTML = ''; // Clear the existing posts
 
 					userPosts.forEach(data => {
-					const postElement = document.createElement('div');
-					postElement.className = 'ind-post';
-					postElement.dataset.postId = data._id; // Set the dataset attribute for the postId
+						const postElement = document.createElement('div');
+						postElement.className = 'ind-post';
+						postElement.dataset.postId = data._id; // Set the dataset attribute for the postId
 
-					postElement.innerHTML = `
-						<div class="post-details-container">
-						${data.image ? `
-						<div class="ind-imgcontainer">
-							<img class="ind-img" src="${data.image}" alt="Post Image">
-						</div>
-						` : ''}
+						let tagsHTML = '';
+						if (data.tags !== null) {
+							const tagsArray = data.tags.map(tag => `#${tag}`);
+							tagsHTML = tagsArray.join(' ');
+						}
 
-						<section style="width: 60%;">
-							<h2 class="ind-title">${data.title}</h2>
-							<h4>${data.tags}</h4>
-							<span class="text-preview">${data.description}</span><br>
+						postElement.innerHTML = `
+							<div class="post-details-container">
+							${data.image ? `
+							<div class="ind-imgcontainer">
+								<img class="ind-img" src="${data.image}" alt="Post Image">
+							</div>
+							` : ''}
 
-							<div class="post-inter">
-							<img src="../img/posts/views.png" style="width: 0.8rem; vertical-align: middle;">
-							<span style="vertical-align: middle;">${data.views}</span>
-							<img src="../img/posts/comments.png" style="width: 0.7rem; vertical-align: middle;">
-							<span style="vertical-align: middle;">${data.commentsCount}</span>
-							<span style="vertical-align: middle;">&nbsp • &nbsp ${new Date(data.createdAt).toLocaleDateString()}</span>
-							</div><br>
+							<section style="width: 60%;">
+								<h2 class="ind-title">${data.title}</h2>
+								<h4>${tagsHTML}</h4>
+								<span class="text-preview">${getSnippet(data.description)}</span><br>
 
-							<span class="post-username">${data.username}</span><br><br>
-						</section>
-						</div>
+								<div class="post-inter">
+								<img src="../img/posts/views.png" style="width: 0.8rem; vertical-align: middle;">
+								<span style="vertical-align: middle;">${data.views}</span>
+								<img src="../img/posts/comments.png" style="width: 0.7rem; vertical-align: middle;">
+								<span style="vertical-align: middle;">${data.commentsCount}</span>
+								<span style="vertical-align: middle;">&nbsp • &nbsp ${new Date(data.createdAt).toLocaleDateString()}</span>
+								</div><br>
 
-						<div class="vote-container">
-						<span class="upvote-count">${data.upvotes}</span>
-						<button class="vote-button upvote">
-							<img class="upvote-image" src="../img/posts/upvote.png" alt="Upvote">
-						</button>
-						<button class="vote-button downvote">
-							<img class="downvote-image" src="../img/posts/downvote.png" alt="Downvote">
-						</button>
-						<span class="downvote-count">${data.downvotes}</span>
-						</div>	
-					`;
+								<span class="post-username">${data.username}</span><br><br>
+							</section>
+							</div>
+
+							<div class="vote-container">
+							<span class="upvote-count">${data.upvotes}</span>
+							<button class="vote-button upvote">
+								<img class="upvote-image" src="../img/posts/upvote.png" alt="Upvote">
+							</button>
+							<button class="vote-button downvote">
+								<img class="downvote-image" src="../img/posts/downvote.png" alt="Downvote">
+							</button>
+							<span class="downvote-count">${data.downvotes}</span>
+							</div>	
+						`;
 
 						profilePostContainer.appendChild(postElement);
 
@@ -442,6 +275,290 @@
 				} catch (error) {
 					console.error('Error fetching user posts:', error);
 				}
+			}
+
+			function getSnippet(text) {
+				const MAX_SNIPPET_LENGTH = 100;
+				if (text.length > MAX_SNIPPET_LENGTH) {
+					return text.substring(0, MAX_SNIPPET_LENGTH) + '...';
+				}
+				return text;
+			}
+
+			/* ------------------------------ FETCH USER COMMENTS ------------------------------*/
+			async function displayComments() {
+				try {
+					// Fetch user details from the session
+					await fetchUserDetails();
+
+					// Get the username from the query parameter
+					const urlSearchParams = new URLSearchParams(window.location.search);
+					const params = Object.fromEntries(urlSearchParams.entries());
+					const username = params.username;
+
+					// Fetch the user profile using the obtained username
+					if (username) {
+						fetchUserProfile(username);
+
+						// Fetch all comments from the server
+						const response = await fetch(`/api/userComments/${username}`);
+						if (!response.ok) {
+							throw new Error('Failed to fetch comments:', response.statusText);
+						}
+						const allComments = await response.json();
+
+						// Filter comments that belong to the specific user
+						const userComments = allComments.filter(comment => comment.username === username);
+
+						// Display the filtered comments
+						const commentsContainer = document.querySelector('.profile-comments');
+						commentsContainer.innerHTML = ''; // Clear existing comments
+
+						// Display message if there are no comments
+						if (allComments.length === 0) {
+							const commentsContainer = document.querySelector('.profile-comments');
+							commentsContainer.innerHTML = '<p>No comments yet</p>';
+							commentsContainer.align = 'center';
+							commentsContainer.fontSize = '2rem';
+							return;
+						}
+						for (const comment of userComments) {
+							const commentHTML = generatecommentHTML(comment);
+							commentsContainer.insertAdjacentHTML('beforeend', commentHTML);
+						}
+					}
+				} catch (error) {
+					console.error('Error displaying comments:', error);
+				}
+			}
+			
+			function generatecommentHTML(commentData) {
+				const isCommentAuthor = commentData.username === loggedInUsername;
+				const commentId = commentData._id;
+
+				let nestedCommentsHTML = '';
+				if (commentData.nestedComments && commentData.nestedComments.length > 0) {
+					nestedCommentsHTML = `
+						<div class="nested-comments" style="display: flex;">
+							${commentData.nestedComments.map(nestedComment => generatecommentHTML(nestedComment)).join('')}
+						</div>
+					`;
+				}
+
+				return `
+					<div class="ind-comment" data-comment-id="${commentId}">
+						<div class="ind-acc">
+							<img style="vertical-align: middle;" class="postcomment-pfp" src="${commentData.profilepicture}">
+							<span style="vertical-align: middle; font-weight: bold; cursor: pointer" onclick="navigateToPost('${commentData.postId}')">${commentData.username}</span>
+						</div>
+						<span class="comment-style">${commentData.content}</span>
+					</div>
+				`;
+			}
+
+			/* ------------------------------ LISTENERS ------------------------------*/
+			function attachTitleClickListeners() {
+				const postTitles = document.querySelectorAll('.ind-title');
+
+					postTitles.forEach((titleElement) => {
+					titleElement.addEventListener('click', (event) => {
+						event.preventDefault();
+						const postElement = titleElement.closest('.ind-post');
+						const postId = postElement.dataset.postId;
+						navigateToPost(postId);
+					});
+				});
+			}
+
+			function attachUsernameClickListeners() {
+				const postUsernames = document.querySelectorAll('.post-username');
+
+				postUsernames.forEach((usernameElement) => {
+					usernameElement.addEventListener('click', (event) => {
+						event.preventDefault();
+						const username = event.target.textContent;
+						navigateToProfile(username);
+					});
+				});
+			}
+
+			// Function to attach event listeners to the upvote and downvote buttons
+			function attachVoteEventListeners(voteContainer) {
+				const upvoteButton = voteContainer.querySelector(".upvote");
+				const downvoteButton = voteContainer.querySelector(".downvote");
+				const upvoteCount = voteContainer.querySelector(".upvote-count");
+				const downvoteCount = voteContainer.querySelector(".downvote-count");
+
+				let upvoteCounter = parseInt(upvoteCount.textContent);
+				let downvoteCounter = parseInt(downvoteCount.textContent);
+
+				// Function to find the postId from the voteContainer
+				function findPostId() {
+					const postContainer = voteContainer.closest(".ind-post");
+					if (postContainer) {
+						return postContainer.dataset.postId;
+					}
+					return null;
+				}
+
+				upvoteButton.addEventListener("click", async () => {
+					if (loggedInUsername === null) {
+						alert("You must be logged in to vote!");
+						return;
+					}
+
+					try {
+						const postId = findPostId(); // Get the postId from the dataset attribute
+
+						if (upvoteButton.classList.contains("voted")) {
+							// User has already upvoted, decrement the counter and remove the vote
+							upvoteCounter--;
+							upvoteButton.classList.remove("voted");
+							localStorage.removeItem(`${postId}_vote`);
+
+							// Send an HTTP PATCH request to remove the upvote from the server
+							await fetch(`/api/posts/${postId}/vote`, {
+								method: "PATCH",
+								headers: {
+									"Content-Type": "application/json",
+								},
+								body: JSON.stringify({ voteType: "remove_upvote" }),
+							});
+						} else {
+							// User is upvoting, increment the counter and set the vote
+							upvoteCounter++;
+							upvoteButton.classList.add("voted");
+							localStorage.setItem(`${postId}_vote`, "upvote");
+							localStorage.removeItem(`${postId}_downvote`);
+
+							// If downvoteButton is active, decrease its counter and remove the downvote
+							if (downvoteButton.classList.contains("voted")) {
+								downvoteCounter--;
+								downvoteButton.classList.remove("voted");
+
+								await fetch(`/api/posts/${postId}/vote`, {
+									method: "PATCH",
+									headers: {
+										"Content-Type": "application/json",
+									},
+									body: JSON.stringify({ voteType: "remove_downvote" }),
+								});
+							}
+
+							// Send an HTTP PATCH request to remove the downvote and add an upvote to the server
+							await fetch(`/api/posts/${postId}/vote`, {
+								method: "PATCH",
+								headers: {
+									"Content-Type": "application/json",
+								},
+								body: JSON.stringify({ voteType: "upvote" }),
+							});
+						}
+
+						// Update the vote count elements
+						upvoteCount.textContent = upvoteCounter.toString();
+						downvoteCount.textContent = downvoteCounter.toString();
+					} catch (error) {
+						console.error("Error upvoting post:", error);
+					}
+				});
+
+				downvoteButton.addEventListener("click", async () => {
+					if (loggedInUsername === null) {
+						alert("You must be logged in to vote!");
+						return;
+					}
+
+					try {
+						const postId = findPostId(); // Get the postId from the dataset attribute
+
+						if (downvoteButton.classList.contains("voted")) {
+							// User has already downvoted, decrement the counter and remove the vote
+							downvoteCounter--;
+							downvoteButton.classList.remove("voted");
+							localStorage.removeItem(`${postId}_vote`);
+							
+							// Send an HTTP PATCH request to remove the downvote from the server
+							await fetch(`/api/posts/${postId}/vote`, {
+								method: "PATCH",
+								headers: {
+									"Content-Type": "application/json",
+								},
+								body: JSON.stringify({ voteType: "remove_downvote" }),
+							});
+						} else {
+							// User is downvoting, increment the counter and set the vote
+							downvoteCounter++;
+							downvoteButton.classList.add("voted");
+							localStorage.setItem(`${postId}_vote`, "downvote");
+							localStorage.removeItem(`${postId}_upvote`);
+
+							// If upvoteButton is active, decrease its counter and remove the upvote
+							if (upvoteButton.classList.contains("voted")) {
+								upvoteCounter--;
+								upvoteButton.classList.remove("voted");
+
+								await fetch(`/api/posts/${postId}/vote`, {
+									method: "PATCH",
+									headers: {
+										"Content-Type": "application/json",
+									},
+								body: JSON.stringify({ voteType: "remove_upvote" }),
+								});
+							}
+
+							// Send an HTTP PATCH request to remove the upvote and add a downvote to the server
+							await fetch(`/api/posts/${postId}/vote`, {
+							method: "PATCH",
+							headers: {
+								"Content-Type": "application/json",
+							},
+							body: JSON.stringify({ voteType: "downvote" }),
+							});
+						}
+
+						// Update the vote count elements
+						upvoteCount.textContent = upvoteCounter.toString();
+						downvoteCount.textContent = downvoteCounter.toString();
+					} catch (error) {
+						console.error("Error downvoting post:", error);
+					}
+				});
+
+				// Check the local storage for user vote when attaching event listeners
+				const postId = findPostId();
+				const userVote = localStorage.getItem(`${postId}_vote`);
+
+				if (userVote === "upvote") {
+					upvoteButton.classList.add("voted");
+				} else if (userVote === "downvote") {
+					downvoteButton.classList.add("voted");
+				}
+			}
+
+			/* ------------------------------ NAVIGATION ------------------------------*/
+			function navigateToUserProfile() {
+				const username = getQueryParam('username');
+				const userProfileUrl = `/html/profile.html?username=${encodeURIComponent(username)}`;
+				window.location.href = userProfileUrl;
+			}
+
+			function navigateToPost(postId) {
+				const postUrl = `/html/post.html?postId=${encodeURIComponent(postId)}`;
+				window.location.href = postUrl;
+			}
+				
+			function navigateToProfile(username) {
+				const userProfileUrl = `/html/profile.html?username=${encodeURIComponent(username)}`;
+				window.location.href = userProfileUrl;
+			}
+
+
+			/* ------------------------------ PROFILE ACTIONS ------------------------------*/
+			async function editProfile() {
+				const username = getQueryParam('username');
+				const editUrl = `/html/editprofile.html?username=${encodeURIComponent(username)}`;
+				window.location.href = editUrl;
 			}
 
 			async function logoutUser() {
@@ -464,104 +581,7 @@
 				}
 			}
 
-			function getQueryParam(param) {
-				const urlParams = new URLSearchParams(window.location.search);
-				return urlParams.get(param);
-			}
-
-			async function editProfile() {
-				const username = getQueryParam('username');
-				const editUrl = `/html/editprofile.html?username=${encodeURIComponent(username)}`;
-				window.location.href = editUrl;
-			}
-
-			async function fetchPostComments(postId) {
-				try {
-					const response = await fetch(`/api/posts/${postId}/comments`);
-					const commentsData = await response.json();
-
-					if (response.status === 200) {
-						return commentsData;
-					} else {
-						console.log('Failed to fetch comments');
-						return [];
-					}
-				} catch (error) {
-					console.error('Error fetching comments:', error);
-					return [];
-				}
-			}
-
-				function generatecommentHTML(commentData) {
-					const isCommentAuthor = commentData.username === loggedInUsername;
-					const commentId = commentData._id;
-
-					let nestedCommentsHTML = '';
-					if (commentData.nestedComments && commentData.nestedComments.length > 0) {
-						nestedCommentsHTML = `
-							<div class="nested-comments" style="display: flex;">
-								${commentData.nestedComments.map(nestedComment => generatecommentHTML(nestedComment)).join('')}
-							</div>
-						`;
-					}
-
-					return `
-						<div class="ind-comment" data-comment-id="${commentId}">
-							<div class="ind-acc">
-								<img style="vertical-align: middle;" class="postcomment-pfp" src="${commentData.profilepicture}">
-								<span style="vertical-align: middle; font-weight: bold; cursor: pointer">${commentData.username}</span>
-							</div>
-							<span class="comment-style">${commentData.content}</span>
-						</div>
-					`;
-				}
-
-				async function displayComments() {
-					try {
-						// Fetch user details from the session
-						await fetchUserDetails();
-
-						// Get the username from the query parameter
-						const urlSearchParams = new URLSearchParams(window.location.search);
-						const params = Object.fromEntries(urlSearchParams.entries());
-						const username = params.username;
-
-						// Fetch the user profile using the obtained username
-						if (username) {
-							fetchUserProfile(username);
-
-							// Fetch all comments from the server
-							const response = await fetch(`/api/userComments/${username}`);
-							if (!response.ok) {
-								throw new Error('Failed to fetch comments:', response.statusText);
-							}
-							const allComments = await response.json();
-
-							// Filter comments that belong to the specific user
-							const userComments = allComments.filter(comment => comment.username === username);
-
-							// Display the filtered comments
-							const commentsContainer = document.querySelector('.profile-comments');
-							commentsContainer.innerHTML = ''; // Clear existing comments
-
-							// Display message if there are no comments
-							if (allComments.length === 0) {
-								const commentsContainer = document.querySelector('.profile-comments');
-								commentsContainer.innerHTML = '<p>No comments yet</p>';
-								commentsContainer.align = 'center';
-								commentsContainer.fontSize = '2rem';
-								return;
-							}
-							for (const comment of userComments) {
-								const commentHTML = generatecommentHTML(comment);
-								commentsContainer.insertAdjacentHTML('beforeend', commentHTML);
-							}
-						}
-					} catch (error) {
-						console.error('Error displaying comments:', error);
-					}
-				}
-
+			/* ------------------------------ LOAD BROWSER ------------------------------*/
 			document.addEventListener('DOMContentLoaded', async () => {
 				// Fetch user details from the session
 				await fetchUserDetails();
@@ -579,8 +599,24 @@
 				const postsButton = document.getElementById('popularBtn');
 				const commentsButton = document.getElementById('newestBtn');
 
-				postsButton.addEventListener('click', toggleDisplayPosts);
-				commentsButton.addEventListener('click', toggleDisplayComments);
+				postsButton.classList.add('active');
+			    commentsButton.classList.remove('active');
+
+				postsButton.addEventListener('click', () => {
+					if (!postsButton.classList.contains('active')) { // Check if not already active
+						toggleDisplayPosts();
+						postsButton.classList.add('active');
+					    commentsButton.classList.remove('active');
+					}
+				});
+
+				commentsButton.addEventListener('click', () => {
+					if (!commentsButton.classList.contains('active')) { // Check if not already active
+						toggleDisplayComments();
+						postsButton.classList.remove('active');
+			  			commentsButton.classList.add('active');
+					}
+				});
 
 				const editButton = document.getElementById('editBtn');
 				const logoutButton = document.getElementById('logoutBtn');

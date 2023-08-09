@@ -3,54 +3,24 @@
 	<head>
 		<title>KAFKAESQUE | View Post</title>
 		<link rel="stylesheet" href="../style.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<link rel="icon" type="image/png" href="/img/Logo_maroon.png">
 	</head>
 		
 	<body>
 		<nav>
-			<div class="logo" onclick="window.location.href='/html/home.html';">
+			<div class="logo" onclick="window.location.href='/';">
 			  <img class="nav-img" src="/img/Logo_white.png" alt="KAFKAESQUE Logo">
 			  <span class="nav-logoname">KAFKAESQUE</span>
 			</div>
 		  
 			<div style="display: flex">
-				<img class="search-icon" src="../img/Search.png" style="float:right;" onclick="window.location.href='search.html';">
+				<img class="search-icon" src="../img/Search.png" style="float:right;" onclick="window.location.href='/html/search.html';">
 				<div class="nav-profile" onclick="navigateToUserProfile()">
 				<span class="nav-profilename"></span>
 				<img class="nav-img" id="nav-user" src="/img/pfp.png" alt="Profile Picture" style="margin-right: 0; padding-right: 0;">
 				</div>
 			</div>	
-		  
-			<script>
-			  	let loggedInUsername = null;
-
-				async function fetchUserDetails() {
-					try {
-					const profileResponse = await fetch('/api/profile');
-					const profileData = await profileResponse.json();
-
-					if (profileResponse.status === 200) {
-						const usernameElement = document.querySelector('.nav-profilename');
-						const profilePictureElement = document.querySelector('#nav-user');
-
-						loggedInUsername = profileData.data.username;
-
-						usernameElement.textContent = profileData.data.username;
-						profilePictureElement.src = profileData.data.profilepicture;
-						
-						const upvotedPosts = profileData.data.upvotedPosts;
-						const downvotedPosts = profileData.data.downvotedPosts;
-
-					} else {
-						console.log('User not authenticated or user details not found');
-					}
-					} catch (error) {
-					console.error('Error fetching user details:', error);
-					}
-				}
-		  
-			  document.addEventListener('DOMContentLoaded', fetchUserDetails);
-			</script>
 		</nav>
 		
 		<main class="main-padding">
@@ -98,7 +68,22 @@
 			</section>
 		</main>
 		
-		<script>	
+		<script>
+			let loggedInUsername = null;
+
+			// NAVIGATION
+			function getQueryParam(param) {
+				const urlParams = new URLSearchParams(window.location.search);
+				return urlParams.get(param);
+			}
+
+			function navigateToUserProfile() {
+				const username = getQueryParam('username');
+				const userProfileUrl = `/html/profile.html?username=${encodeURIComponent(username)}`;
+				window.location.href = userProfileUrl;
+			}
+
+			// FETCH USER DETAILS
 			async function fetchUserDetails() {
 				try {
 					const profileResponse = await fetch('/api/profile');
@@ -120,24 +105,24 @@
 						} else {
 							bioElement.textContent = 'Bio Empty';
 						}
+
+						const usernameElementNav = document.querySelector('.nav-profilename');
+						const profilePictureElementNav = document.querySelector('#nav-user');
+
+						loggedInUsername = profileData.data.username;
+
+						usernameElementNav.textContent = profileData.data.username;
+						profilePictureElementNav.src = profileData.data.profilepicture;
+
+						const upvotedPosts = profileData.data.upvotedPosts;
+						const downvotedPosts = profileData.data.downvotedPosts;
 					} else {
 						console.log('User not authenticated or user details not found');
 					}
 				} catch (error) {
 					console.error('Error fetching user details:', error);
 				}
-			}
-
-			function getQueryParam(param) {
-				const urlParams = new URLSearchParams(window.location.search);
-				return urlParams.get(param);
-			}
-
-			function navigateToUserProfile() {
-				const username = getQueryParam('username');
-				const userProfileUrl = `/html/profile.html?username=${encodeURIComponent(username)}`;
-				window.location.href = userProfileUrl;
-			}
+			}			
 
 			async function saveChanges(event) {
 				event.preventDefault();

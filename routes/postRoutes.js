@@ -35,7 +35,7 @@ router.get('/displayPosts/:sortBy', async (req, res) => {
   try {
       const sortBy = req.params.sortBy;
       const page = req.query.page;
-      const limit = 15; //TODO: change to 15
+      const limit = req.query.limit;
 
       let posts;
     
@@ -181,10 +181,10 @@ router.patch('/posts/:postId/vote', async (req, res) => {
           user.downvotedPosts.push(postId);
       } else if (voteType === 'remove_upvote') {
           post.upvotes -= 1;
-          user.upvotedPosts = user.upvotedPosts.filter(id => id !== postId);
+          user.upvotedPosts = user.upvotedPosts.filter(id => id.toString() !== postId);
       } else if (voteType === 'remove_downvote') {
           post.downvotes -= 1;
-          user.downvotedPosts = user.downvotedPosts.filter(id => id !== postId);
+          user.downvotedPosts = user.downvotedPosts.filter(id => id.toString() !== postId);
       } else {
           return res.status(400).json({ error: 'Invalid voteType' });
       }
@@ -584,7 +584,6 @@ router.patch("/editComment/:commentId", async (req, res) => {
   }
 });
 
-
 router.delete("/deletePost/:postId", async (req, res) => {
   try {
     const postId = req.params.postId;
@@ -595,9 +594,8 @@ router.delete("/deletePost/:postId", async (req, res) => {
       return res.status(404).json({ error: 'Post not found' });
     }
 
-    // You may want to add additional checks here, such as verifying if the user making the request is the author of the post before allowing deletion.
+    await Comment.deleteMany({ postId });
 
-    // If all checks pass, proceed with deleting the post
     await Post.findByIdAndDelete(postId);
 
     // Return a success response

@@ -9,52 +9,24 @@
 		
 	<body>
 		<nav>
-			<div class="logo" onclick="window.location.href='home.html';">
-				<img class="nav-img" src="../img/Logo_white.png" alt="KAFKAESQUE Logo">
-				<span class="nav-logoname">KAFKAESQUE</span>
+			<div class="logo" onclick="window.location.href='/'">
+			  <img class="nav-img" src="/img/Logo_white.png" alt="KAFKAESQUE Logo">
+			  <span class="nav-logoname">KAFKAESQUE</span>
 			</div>
-			
+
 			<div style="width:50%;">
 				<input type="text" class="nav-search" id="searchInput" placeholder="Search...">
 				<img class="search-icon" src="/img/Search.png" onclick="performSearch()">
 			</div>
-			
-			<div class="nav-profile" onclick="navigateToUserProfile();">
-				<span class="nav-profilename">Kafka</span>
-				<img class="nav-img" id="nav-user" src="../img/pfp.png" alt="Profile Picture" style="margin-right: 0; padding-right: 0;">
-			</div>
-
-			<script>
-				let loggedInUsername = null;
-
-				async function fetchUserDetails() {
-					try {
-					const profileResponse = await fetch('/api/profile');
-					const profileData = await profileResponse.json();
-
-					if (profileResponse.status === 200) {
-						const usernameElement = document.querySelector('.nav-profilename');
-						const profilePictureElement = document.querySelector('#nav-user');
-
-						loggedInUsername = profileData.data.username;
-
-						usernameElement.textContent = profileData.data.username;
-						profilePictureElement.src = profileData.data.profilepicture;
-
-						// Assuming the user data includes upvotedPosts and downvotedPosts arrays
-						// const upvotedPosts = profileData.data.upvotedPosts;
-						// const downvotedPosts = profileData.data.downvotedPosts;
-					} else {
-						console.log('User not authenticated or user details not found');
-					}
-					} catch (error) {
-					console.error('Error fetching user details:', error);
-					}
-				}
 		  
-				document.addEventListener('DOMContentLoaded', fetchUserDetails);
-			</script>
-		</nav>
+			<div class="nav-user" style="display: flex">
+				<img class="search-icon" src="/img/Search.png" style="float:right;" onclick="window.location.href='/html/search.html';">
+				<div class="nav-profile" onclick="navigateToUserProfile()">
+					<span class="nav-profilename"></span>
+					<img class="nav-img" id="nav-user" src="/img/profiles/default.jpg" alt="Profile Picture" style="margin-right: 0; padding-right: 0;">
+				</div>
+			</div>	
+		</nav>	
 		
 		<main class="main-padding">
 			<section class="col-trending">
@@ -70,7 +42,7 @@
 			</section>
 			
 			<section class="col-main">	
-				<button type="submit" class="back-btn" onclick="window.location.href='../html/home.html';"><img src="/img/postpg/back.png" style="width:30px;"></button><br>
+				<button type="submit" class="back-btn" onclick="window.location.href='/';"><img src="/img/back.png" style="width:30px;"></button><br>
 
 				<span class="search-title" wrap="soft">Search for ...</span><br><br><hr><br><br>
 						
@@ -96,6 +68,10 @@
 		</main>
 		
 		<script>
+			let loggedInUsername = null;
+			let upvotedPosts = [];
+			let downvotedPosts = [];
+
 			/* ------------------------------ NAVIGATION ------------------------------ */
 			function navigateToUserProfile() {
 				if (loggedInUsername) {
@@ -103,6 +79,32 @@
 					window.location.href = userProfileUrl;
 				} else {
 					console.error('User is not logged in. Unable to redirect to the profile.');
+				}
+			}
+
+			/* ------------------------------ FETCH USER DETAILS ------------------------------ */
+			async function fetchUserDetails() {
+				try {
+				const profileResponse = await fetch('/api/profile');
+				const profileData = await profileResponse.json();
+
+				if (profileResponse.status === 200) {
+					const usernameElement = document.querySelector('.nav-profilename');
+					const profilePictureElement = document.querySelector('#nav-user');
+
+					loggedInUsername = profileData.data.username;
+
+					usernameElement.textContent = profileData.data.username;
+					profilePictureElement.src = profileData.data.profilepicture;
+
+					// Assuming the user data includes upvotedPosts and downvotedPosts arrays
+					upvotedPosts = profileData.data.upvotedPosts;
+					downvotedPosts = profileData.data.downvotedPosts;
+				} else {
+					console.log('User not authenticated or user details not found');
+				}
+				} catch (error) {
+				console.error('Error fetching user details:', error);
 				}
 			}
 
@@ -235,6 +237,9 @@
 					tagsHTML = tagsArray.join(' ');
 				}
 
+				const userUpvoted = upvotedPosts.includes(post._id);
+				const userDownvoted = downvotedPosts.includes(post._id);
+
 				postDetailsContainer.innerHTML = `
 				${post.image ? `
 					<div class="ind-imgcontainer">
@@ -255,7 +260,20 @@
 					</div><br>
 					<span class="post-username">${post.username}</span>
 				</section>
+
+				<div class="vote-container">
+					<span class="upvote-count">${post.upvotes}</span>
+					<button class="vote-button upvote ${userUpvoted ? 'voted' : ''}">
+						<img class="upvote-image" src="/img/posts/upvote.png" alt="Upvote">
+					</button>
+					<button class="vote-button downvote ${userDownvoted ? 'voted' : ''}">
+						<img class="downvote-image" src="/img/posts/downvote.png" alt="Downvote">
+					</button>
+					<span class="downvote-count">${post.downvotes}</span>
+				</div>
 				`;
+
+				attachVoteEventListeners(postDetailsContainer);
 				
 				return postDetailsContainer;
 			}
@@ -277,6 +295,159 @@
 				`;
 
 				return accountElement;
+			}
+
+			function attachVoteEventListeners(voteContainer) {
+				const upvoteButton = voteContainer.querySelector(".upvote");
+				const downvoteButton = voteContainer.querySelector(".downvote");
+				const upvoteCount = voteContainer.querySelector(".upvote-count");
+				const downvoteCount = voteContainer.querySelector(".downvote-count");
+
+				let upvoteCounter = parseInt(upvoteCount.textContent);
+				let downvoteCounter = parseInt(downvoteCount.textContent);
+
+				// Function to find the postId from the voteContainer
+				function findPostId() {
+					const postContainer = voteContainer.closest(".ind-post");
+					if (postContainer) {
+					return postContainer.dataset.postId;
+					}
+					return null;
+				}
+
+				upvoteButton.addEventListener("click", async () => {
+					// Alert the user to login if they want to vote
+					if (loggedInUsername === null) {
+						alert("You must be logged in to vote!");
+						return;
+					}
+
+					try {
+						const postId = findPostId(); // Get the postId from the dataset attribute
+
+						if (upvoteButton.classList.contains("voted")) {
+							// User has already upvoted, decrement the counter and remove the vote
+							upvoteCounter--;
+							upvoteButton.classList.remove("voted");
+							localStorage.removeItem(`${postId}_vote`);
+
+							// Send an HTTP PATCH request to remove the upvote from the server
+							await fetch(`/api/posts/${postId}/vote`, {
+							method: "PATCH",
+							headers: {
+								"Content-Type": "application/json",
+							},
+							body: JSON.stringify({ voteType: "remove_upvote" }),
+							});
+						} else {
+							// User is upvoting, increment the counter and set the vote
+							upvoteCounter++;
+							upvoteButton.classList.add("voted");
+							localStorage.setItem(`${postId}_vote`, "upvote");
+							localStorage.removeItem(`${postId}_downvote`);
+
+							// If downvoteButton is active, decrease its counter and remove the downvote
+							if (downvoteButton.classList.contains("voted")) {
+								downvoteCounter--;
+								downvoteButton.classList.remove("voted");
+
+								await fetch(`/api/posts/${postId}/vote`, {
+									method: "PATCH",
+									headers: {
+									"Content-Type": "application/json",
+									},
+									body: JSON.stringify({ voteType: "remove_downvote" }),
+								});
+							}
+
+							// Send an HTTP PATCH request to remove the downvote and add an upvote to the server
+							await fetch(`/api/posts/${postId}/vote`, {
+								method: "PATCH",
+								headers: {
+								"Content-Type": "application/json",
+								},
+								body: JSON.stringify({ voteType: "upvote" }),
+							});
+						}
+
+						// Update the vote count elements
+						upvoteCount.textContent = upvoteCounter.toString();
+						downvoteCount.textContent = downvoteCounter.toString();
+					} catch (error) {
+					console.error("Error upvoting post:", error);
+					}
+				});
+
+				downvoteButton.addEventListener("click", async () => {
+					if (loggedInUsername === null) {
+						alert("You must be logged in to vote!");
+						return;
+					}
+
+					try {
+					const postId = findPostId(); // Get the postId from the dataset attribute
+
+					if (downvoteButton.classList.contains("voted")) {
+						// User has already downvoted, decrement the counter and remove the vote
+						downvoteCounter--;
+						downvoteButton.classList.remove("voted");
+						localStorage.removeItem(`${postId}_vote`);
+						// Send an HTTP PATCH request to remove the downvote from the server
+						await fetch(`/api/posts/${postId}/vote`, {
+						method: "PATCH",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({ voteType: "remove_downvote" }),
+						});
+					} else {
+						// User is downvoting, increment the counter and set the vote
+						downvoteCounter++;
+						downvoteButton.classList.add("voted");
+						localStorage.setItem(`${postId}_vote`, "downvote");
+						localStorage.removeItem(`${postId}_upvote`);
+
+						// If upvoteButton is active, decrease its counter and remove the upvote
+						if (upvoteButton.classList.contains("voted")) {
+						upvoteCounter--;
+						upvoteButton.classList.remove("voted");
+
+						await fetch(`/api/posts/${postId}/vote`, {
+							method: "PATCH",
+							headers: {
+							"Content-Type": "application/json",
+							},
+							body: JSON.stringify({ voteType: "remove_upvote" }),
+						});
+						}
+
+						// Send an HTTP PATCH request to remove the upvote and add a downvote to the server
+						await fetch(`/api/posts/${postId}/vote`, {
+							method: "PATCH",
+							headers: {
+							"Content-Type": "application/json",
+							},
+							body: JSON.stringify({ voteType: "downvote" }),
+						});
+					}
+
+					// Update the vote count elements
+					upvoteCount.textContent = upvoteCounter.toString();
+					downvoteCount.textContent = downvoteCounter.toString();
+					} catch (error) {
+					console.error("Error downvoting post:", error);
+					}
+				});
+
+				// Check the local storage for user vote when attaching event listeners
+				const postId = findPostId();
+				const userVote = localStorage.getItem(`${postId}_vote`);
+
+				if (userVote === "upvote") {
+					upvoteButton.classList.add("voted");
+				} else if (userVote === "downvote") {
+					downvoteButton.classList.add("voted");
+				}
 			}
 
 			function performSearch() {
