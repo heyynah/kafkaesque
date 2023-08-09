@@ -61,19 +61,21 @@
 				<span>Trending Games</span><br>
 				
 				<div class="trending-list">
-					<img class="ind-game" src="../img/trending/1.png">
-					<img class="ind-game" src="../img/trending/2.png">
-					<img class="ind-game" src="../img/trending/3.png">
-					<img class="ind-game" src="../img/trending/4.png">
-					<img class="ind-game" src="../img/trending/5.png">
+					<a href="https://www.youtube.com/watch?v=1INU3FOJsTw&ab_channel=StreetFighter"><img src="../img/trending/1.png" class="ind-game"></a><br>
+					<a href="https://www.youtube.com/watch?v=XPYqvSRWkx4&ab_channel=Honkai%3AStarRail"><img src="../img/trending/2.png" class="ind-game"></a><br>
+					<a href="https://www.youtube.com/watch?v=hCgiwsIUI4g&ab_channel=GameSpot"><img src="../img/trending/3.png" class="ind-game"></a><br>
+					<a href="https://www.youtube.com/watch?v=kJawWyRUOBM&ab_channel=GameSpot"><img src="../img/trending/4.png" class="ind-game"></a><br>
+					<a href="https://www.youtube.com/watch?v=_ckLOyVEVVs&ab_channel=GameSpot"><img src="../img/trending/5.png" class="ind-game"></a><br>
 				</div>
 			</section>
 			
 			<section class="col-main">	
-				<button type="submit" class="back-btn" onclick="window.location.href='../html/home.html';"><img src="/img/postpg/back.png" style="width:30px;"></button>
+				<button type="submit" class="back-btn" onclick="window.location.href='../html/home.html';"><img src="/img/postpg/back.png" style="width:30px;"></button><br>
+
+				<span class="search-title" wrap="soft">Search for ...</span><br><br><hr><br><br>
 						
 				<div class="postContainer">
-					<img src="../img/pepe jr support.png" style="margin-left:30%;">
+					<div class="search-result"><img src="../img/pepe jr support.png"></div>	
 				</div>
 			</section>	
 			
@@ -82,28 +84,47 @@
 				<span class="cat-ind">Action</span><br>
 				<span class="cat-ind">Action-Adventure</span><br>
 				<span class="cat-ind">Adventure</span><br>
-				<span class="cat-ind">Puzzle</span><br>
-				<span class="cat-ind">Role-Playing</span><br>
-				<span class="cat-ind">Simulation</span><br>
-				<span class="cat-ind">Strategy</span><br>
+				<span class="cat-ind">Board Games</span><br>
+				<span class="cat-ind">Gacha</span><br>
 				<span class="cat-ind">MMO</span><br>
 				<span class="cat-ind">Platformer</span><br>
-				<span class="cat-ind">Board Games</span><br>
-				<span class="cat-ind">Gacha</span><br>			
+				<span class="cat-ind">Puzzle</span><br>	
+				<span class="cat-ind">Role-Playing</span><br>
+				<span class="cat-ind">Simulation</span><br>
+				<span class="cat-ind">Strategy</span><br>	
 			</section>
 		</main>
 		
 		<script>
-			// const voteContainers = document.getElementsByClassName("ind-post");
+			/* ------------------------------ NAVIGATION ------------------------------ */
+			function navigateToUserProfile() {
+				if (loggedInUsername) {
+					const userProfileUrl = `/html/profile.html?username=${encodeURIComponent(loggedInUsername)}`;
+					window.location.href = userProfileUrl;
+				} else {
+					console.error('User is not logged in. Unable to redirect to the profile.');
+				}
+			}
+
+			function searchTitleUpdate() {
+				const searchInput = document.querySelector('#searchInput');
+				const searchTitle = document.querySelector('.search-title');
+
+				if (searchInput.value === '') {
+					searchTitle.textContent = 'Search for ...';
+				} else {
+					searchTitle.textContent = "Searching for \"" + searchInput.value + "\"";
+				}
+			}
 
 			async function updatePostViews(postId) {
 				try {
 					await fetch(`/api/views/${postId}`, {
-						method: 'PATCH', // You may use 'PUT' or 'POST' depending on your server's implementation
+						method: 'PATCH',
 						headers: {
 							'Content-Type': 'application/json',
 						},
-						body: JSON.stringify({}), // You can send an empty body or any data if needed
+						body: JSON.stringify({}),
 					});
 				} catch (error) {
 					console.error('Error updating post views:', error);
@@ -123,15 +144,6 @@
 						navigateToPost(postId);
 					});
 				});
-			}
-
-			function navigateToUserProfile() {
-				if (loggedInUsername) {
-					const userProfileUrl = `/html/profile.html?username=${encodeURIComponent(loggedInUsername)}`;
-					window.location.href = userProfileUrl;
-				} else {
-					console.error('User is not logged in. Unable to redirect to the profile.');
-				}
 			}
 
 			// Function to handle navigation to a single post
@@ -158,18 +170,26 @@
 				});
 			}
 
+			function getSnippet(text) {
+				const MAX_SNIPPET_LENGTH = 100;
+				if (text.length > MAX_SNIPPET_LENGTH) {
+					return text.substring(0, MAX_SNIPPET_LENGTH) + '...';
+				}
+				return text;
+			}
+
 			function displaySearchResults(searchQuery) {
 				const searchResultDiv = document.querySelector('.postContainer');
 				searchResultDiv.innerHTML = '';
 
 				if (searchQuery.trim() === '') {
-				searchResultDiv.innerHTML = `
-					<div class="search-result" style="margin-left:30%">
-						<img src="../img/pepe jr support.png"><br><br>
-						<span>Please enter a search query</span>
-					</div>
-				`;
-				return;
+					searchResultDiv.innerHTML = `
+						<div class="search-result">
+							<img src="../img/pepe jr support.png"><br><br>
+							<span>Please enter a search query</span>
+						</div>
+					`;
+					return;
 				}
 
 				fetch(`/api/results/${searchQuery}`)
@@ -177,7 +197,7 @@
 				.then(data => {
 					if (data.posts.length === 0 && data.accounts.length === 0) {
 						searchResultDiv.innerHTML = `
-							<div class="search-result" style="margin-left:30%">
+							<div class="search-result">
 								<img src="../img/pepe jr support.png"><br><br>
 								<span>No results found :(</span>
 							</div>
@@ -209,22 +229,29 @@
 				postDetailsContainer.classList.add('ind-post');
 				postDetailsContainer.dataset.postId = post._id;
 
+				let tagsHTML = '';
+				if (post.tags !== null) {
+					const tagsArray = post.tags.map(tag => `#${tag}`);
+					tagsHTML = tagsArray.join(' ');
+				}
+
 				postDetailsContainer.innerHTML = `
 				${post.image ? `
 					<div class="ind-imgcontainer">
 					<img class="ind-img" src="${post.image}">
 					</div>
 				` : ''}
+
 				<section style="width: 60%;">
 					<h2 class="ind-title">${post.title}</h2>
 					<h4>${post.tags}</h4>
-					<span class="text-preview">${post.description}</span><br>
+					<span class="text-preview">${getSnippet(post.description)}</span><br>
 					<div class="post-inter">
-					<img src="/img/posts/views.png" style="width: 0.8rem; vertical-align: middle;">
-					<span style="vertical-align: middle;">${post.views}</span>
-					<img src="/img/posts/comments.png" style="width: 0.7rem; vertical-align: middle;">
-					<span style="vertical-align: middle;">${post.commentsCount}</span>
-					<span style="vertical-align: middle;">&nbsp • &nbsp ${new Date(post.createdAt).toLocaleDateString()}</span>
+						<img src="/img/posts/views.png" style="width: 0.8rem; vertical-align: middle;">
+						<span style="vertical-align: middle;">${post.views}</span>
+						<img src="/img/posts/comments.png" style="width: 0.7rem; vertical-align: middle;">
+						<span style="vertical-align: middle;">${post.commentsCount}</span>
+						<span style="vertical-align: middle;">&nbsp • &nbsp ${new Date(post.createdAt).toLocaleDateString()}</span>
 					</div><br>
 					<span class="post-username">${post.username}</span>
 				</section>
@@ -242,7 +269,7 @@
 					<img class="ind-img" src="${account.profilepicture}">
 					</div>
 					<section style="width: 75%;">
-						<h2 class="ind-title">${account.displayname}</h2>
+						<h2>${account.displayname}</h2>
 						<h4>${account.location}</h4>
 						<span class="text-preview">${account.bio}</span><br>
 						<span class="post-username">${account.username}</span>
@@ -255,6 +282,7 @@
 			function performSearch() {
 				const searchInput = document.getElementById('searchInput').value;
 				displaySearchResults(searchInput);
+				searchTitleUpdate();
 			}
 
 			document.addEventListener('DOMContentLoaded', () => {

@@ -794,3 +794,9 @@ h4 {
 	text-align: center;
 	font-weight: bold;
 }
+
+.search-title {
+	font-size: 3rem;
+	color: var(--pinkish);
+	padding: 1rem;
+}

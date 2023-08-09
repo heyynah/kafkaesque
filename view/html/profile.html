@@ -358,12 +358,24 @@
 
 					// Use backticks for the template literal to include the username in the URL
 					const response = await fetch(`/api/user-posts/${username}`);
+
 					if (!response.ok) {
 						throw new Error('Failed to fetch user posts:', response.statusText);
 					}
 					const userPosts = await response.json();
+
+					console.log(userPosts)
 					if (!Array.isArray(userPosts)) {
 						console.error('Invalid user posts data. Expected an array.');
+						return;
+					}
+
+					// If array is empty, display a message
+					if (userPosts.length === 0) {
+						const profilePostContainer = document.querySelector('.profile-post');
+						profilePostContainer.innerHTML = '<p>No posts yet</p>';
+						profilePostContainer.align = 'center';
+						profilePostContainer.fontSize = '2rem';
 						return;
 					}
 
@@ -432,23 +444,6 @@
 				}
 			}
 
-			async function fetchPostComments(postId) {
-				try {
-					const response = await fetch(`/api/posts/${postId}/comments`);
-					const commentsData = await response.json();
-
-					if (response.status === 200) {
-						return commentsData;
-					} else {
-						console.log('Failed to fetch comments');
-						return [];
-					}
-				} catch (error) {
-					console.error('Error fetching comments:', error);
-					return [];
-				}
-			}
-
 			async function logoutUser() {
 				const confirmation = confirm('Are you sure you want to logout?');
 
@@ -467,12 +462,7 @@
 					console.log('Error logging out:', error);
 					}
 				}
-				}
-
-				document.addEventListener('DOMContentLoaded', async () => {
-				await fetchUserDetails();
-				await fetchUserPosts();
-			});
+			}
 
 			function getQueryParam(param) {
 				const urlParams = new URLSearchParams(window.location.search);
@@ -486,21 +476,21 @@
 			}
 
 			async function fetchPostComments(postId) {
-        try {
-            const response = await fetch(`/api/posts/${postId}/comments`);
-            const commentsData = await response.json();
+				try {
+					const response = await fetch(`/api/posts/${postId}/comments`);
+					const commentsData = await response.json();
 
-            if (response.status === 200) {
-                return commentsData;
-            } else {
-                console.log('Failed to fetch comments');
-                return [];
-            }
-        } catch (error) {
-            console.error('Error fetching comments:', error);
-            return [];
-        }
-    }
+					if (response.status === 200) {
+						return commentsData;
+					} else {
+						console.log('Failed to fetch comments');
+						return [];
+					}
+				} catch (error) {
+					console.error('Error fetching comments:', error);
+					return [];
+				}
+			}
 
 				function generatecommentHTML(commentData) {
 					const isCommentAuthor = commentData.username === loggedInUsername;
@@ -554,6 +544,14 @@
 							const commentsContainer = document.querySelector('.profile-comments');
 							commentsContainer.innerHTML = ''; // Clear existing comments
 
+							// Display message if there are no comments
+							if (allComments.length === 0) {
+								const commentsContainer = document.querySelector('.profile-comments');
+								commentsContainer.innerHTML = '<p>No comments yet</p>';
+								commentsContainer.align = 'center';
+								commentsContainer.fontSize = '2rem';
+								return;
+							}
 							for (const comment of userComments) {
 								const commentHTML = generatecommentHTML(comment);
 								commentsContainer.insertAdjacentHTML('beforeend', commentHTML);
@@ -563,7 +561,6 @@
 						console.error('Error displaying comments:', error);
 					}
 				}
-
 
 			document.addEventListener('DOMContentLoaded', async () => {
 				// Fetch user details from the session
