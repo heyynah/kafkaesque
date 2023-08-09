@@ -136,7 +136,7 @@ router.post('/add-post', upload.single('image'), async (req, res) => {
 
         await newPost.save();
 
-        res.redirect('/html/home.html');
+        res.redirect('/');
     } catch (error) {
         console.error('Error adding post:', error);
         res.status(500).send('Error adding post. Please try again later.');
