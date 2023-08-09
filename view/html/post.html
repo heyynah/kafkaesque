@@ -916,13 +916,13 @@
 					comment.contentEditable = true;
 
 					// Set the edit button text to "Save"
-					const editButton = document.querySelector('.edit-comment-button');
+					const editButton = document.querySelector(`[data-comment-id="${commentId}"] .edit-comment-button`);
 					editButton.textContent = 'Save';
 
-					const deleteButton = document.querySelector('.delete-comment-button');
+					const deleteButton = document.querySelector(`[data-comment-id="${commentId}"] .delete-comment-button`);
 					deleteButton.style.display = 'none';
 
-					const cancelButton = document.querySelector('.cancel-comment-button');
+					const cancelButton = document.querySelector(`[data-comment-id="${commentId}"] .cancel-comment-button`);
 					cancelButton.style.display = 'inline-block';
 
 					// Add a click event listener to the edit button
@@ -931,25 +931,27 @@
 						const updatedComment = comment.textContent.trim();
 
 						// Send a PUT request to the API to update the comment
-						try {
-							const response = await fetch(`/api/editComment/${commentId}`, {
-								method: 'PATCH',
-								headers: {
-									'Content-Type': 'application/json',
-								},
-								body: JSON.stringify({
-									content: updatedComment,
-								}),
-							});
+						if (editButton.textContent === 'Save') {
+							try {
+								const response = await fetch(`/api/editComment/${commentId}`, {
+									method: 'PATCH',
+									headers: {
+										'Content-Type': 'application/json',
+									},
+									body: JSON.stringify({
+										content: updatedComment,
+									}),
+								});
 
-							if (response.ok) {
-								// If the update is successful, reload the page
-								window.location.reload();
-							} else {
-								throw new Error('Failed to update comment');
+								if (response.ok) {
+									// If the update is successful, reload the page
+									window.location.reload();
+								} else {
+									throw new Error('Failed to update comment');
+								}
+							} catch (error) {
+								console.error('Error updating comment:', error);
 							}
-						} catch (error) {
-							console.error('Error updating comment:', error);
 						}
 					});
 				} catch (error) {
@@ -1016,9 +1018,32 @@
 			}
 
 			function attachCancelCommentListener() {
-				const cancelButton = document.querySelector('.cancel-comment-button');
-				cancelButton.addEventListener('click', () => {
-					window.location.reload();
+				const cancelButton = document.querySelectorAll('.cancel-comment-button');
+				cancelButton.forEach((button) => {
+					button.addEventListener('click', (event) => {
+						const commentId = event.target.dataset.commentId;
+
+						const comment = document.querySelector(`[data-comment-id="${commentId}"] .comment-style`);
+							
+						if (!comment) {
+							console.error('Comment element not found.');
+							return;
+						}
+
+						// Make the comment not editable
+						comment.contentEditable = false;
+							
+						// const editButton = document.querySelector(`[data-comment-id="${commentId}"] .edit-comment-button`);
+						// editButton.textContent = 'Edit';
+
+						// const deleteButton = document.querySelector(`[data-comment-id="${commentId}"] .delete-comment-button`);
+						// deleteButton.style.display = 'inline-block';
+
+						// const cancelButton = document.querySelector(`[data-comment-id="${commentId}"] .cancel-comment-button`);
+						// cancelButton.style.display = 'none';
+						// console.log('Cancel edit clicked');
+						window.location.reload();
+					});
 				});
 			}
 
