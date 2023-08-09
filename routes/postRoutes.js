@@ -199,10 +199,32 @@ router.patch('/posts/:postId/vote', async (req, res) => {
   }
 });
 
+router.get('/getUserVotedComments', async (req, res) => {
+  try {
+      const username = req.session.user.username;
+
+      // Find the user by their username
+      const user = await User.findOne({ username });
+
+      if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+      }
+
+      const upvotedComments = user.upvotedComments;
+      const downvotedComments = user.downvotedComments;
+
+      res.status(200).json({ upvotedComments, downvotedComments });
+  } catch (error) {
+      console.error('Error retrieving user voted comments:', error);
+      res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 router.patch('/commentsVote/:commentId', async (req, res) => {
   const { commentId } = req.params;
   const { voteType } = req.body;
 
+  console.log(voteType);
   try {
     const comment = await Comment.findById(commentId);
 
@@ -233,10 +255,11 @@ router.patch('/commentsVote/:commentId', async (req, res) => {
       user.downvotedComments.push(commentId);
     } else if (voteType === 'remove_upvote') {
       comment.upvotes -= 1;
-      user.upvotedComments = user.upvotedComments.filter(id => id !== commentId);
+      user.upvotedComments = user.upvotedComments.filter(id => id.toString() !== commentId);
+      console.log(user.upvotedComments);
     } else if (voteType === 'remove_downvote') {
       comment.downvotes -= 1;
-      user.downvotedComments = user.downvotedComments.filter(id => id !== commentId);
+      user.downvotedComments = user.downvotedComments.filter(id => id.toString() !== commentId);
     } else {
       return res.status(400).json({ error: 'Invalid voteType' });
     }

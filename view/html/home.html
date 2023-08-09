@@ -223,6 +223,8 @@
 		<script>
 			let activeSortOption = 'newest';
 			const postContainer = document.getElementById('postContainer');
+			
+			const updatedViews = {}; // Keep track of updated views to prevent multiple updates
 
 			async function loadPosts(sortBy = 'newest', page = 1, limit = 15, upvotedPosts = [], downvotedPosts = []) {
 				try {
@@ -527,7 +529,10 @@
 						event.preventDefault();
 						const postElement = titleElement.closest('.ind-post');
 						const postId = postElement.dataset.postId;
-						updatePostViews(postId);
+						if (!updatedViews[postId]) {
+							updatedViews[postId] = true; // Mark views as updated
+							updatePostViews(postId);
+						}
 						navigateToPost(postId);
 					});
 				});
